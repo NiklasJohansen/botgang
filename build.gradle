@@ -14,6 +14,7 @@ repositories {
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.6.10"
+    implementation(files("libs/bot-coding-challenge.jar"))
     compile 'no.njoh:pulse-engine:0.8.0'
 }
 
