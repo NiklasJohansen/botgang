@@ -9,23 +9,29 @@
 </body>
 <script>
     const connection = new WebSocket('ws://127.0.0.1:55501');
+    let command = "IDLE"
+
+    document.onkeypress = function (e) {
+        if (e.keyCode === 119) command = "MOVE_UP"
+        if (e.keyCode === 115) command = "MOVE_DOWN"
+        if (e.keyCode === 97)  command = "MOVE_LEFT"
+        if (e.keyCode === 100) command = "MOVE_RIGHT"
+    };
 
     connection.onmessage = function(event) {
-        try {
-            const gameState = JSON.parse(event.data);
+        // Parse game state
+        const gameState = JSON.parse(event.data);
+        document.getElementById("label").innerHTML = gameState.timestamp;
 
-            document.getElementById("label").innerHTML = gameState.timestamp;
+        // Create and sent response
+        const clientResponse = JSON.stringify({
+            clientName: "JS_Client",
+            command: command
+        });
+        connection.send(clientResponse);
 
-            const clientResponse = JSON.stringify({
-                clientName: "JS_Client",
-                message: "Hello "
-            });
-
-            connection.send(clientResponse);
-        }
-        catch (error) {
-            document.getElementById("label").innerHTML = event.data;
-        }
+        // Reset command
+        command = "IDLE"
     }
 </script>
 </html>
