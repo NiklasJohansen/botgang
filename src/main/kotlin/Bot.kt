@@ -36,38 +36,38 @@ class Bot : SceneEntity(), Updatable, Spatial, Renderable
     {
         client?.response?.clientName?.let { name = it.take(10) }
 
-        val level = engine.scene.getFirstEntityOfType<Level>()
-        val command = client?.response?.command ?: IDLE
-
-        if (level != null)
+        when (client?.response?.command)
         {
-            when (command)
-            {
-                MOVE_UP -> move(level, 0, -1)
-                MOVE_DOWN -> move(level, 0, 1)
-                MOVE_LEFT -> move(level, -1, 0)
-                MOVE_RIGHT -> move(level, 1, 0)
-                IDLE -> {  }
-            }
-
-            x = level.x - (level.width * 0.5f) + (xCell * level.cellSize) + (level.cellSize * 0.5f)
-            y = level.y - (level.height * 0.5f) + (yCell * level.cellSize) + (level.cellSize * 0.5f)
+            MOVE_UP      -> move(engine, 0, -1)
+            MOVE_DOWN    -> move(engine, 0, 1)
+            MOVE_LEFT    -> move(engine, -1, 0)
+            MOVE_RIGHT   -> move(engine, 1, 0)
+            ROTATE_UP    -> angle = 90
+            ROTATE_DOWN  -> angle = 270
+            ROTATE_LEFT  -> angle = 180
+            ROTATE_RIGHT -> angle = 0
+            IDLE, null   -> { }
         }
     }
 
-    private fun move(level: Level, xDir: Int, yDir: Int)
+    private fun move(engine: PulseEngine, xDir: Int, yDir: Int)
     {
-        if (level.canMoveTo(xCell + xDir, yCell + yDir))
+        if (engine.scene.getFirstEntityOfType<Level>()?.isWalkable(xCell + xDir, yCell + yDir) == true)
         {
             xCell += xDir
             yCell += yDir
         }
     }
 
-    override fun onRender(engine: PulseEngine, surface: Surface2D)
+    override fun onFixedUpdate(engine: PulseEngine)
     {
-        surface.setDrawColor(color)
-        surface.drawTexture(Texture.BLANK, x, y, width, height, rotation, xOrigin = 0.5f, yOrigin = 0.5f)
+        val level = engine.scene.getFirstEntityOfType<Level>() ?: return
+        val xTarget = level.x - (level.width * 0.5f) + level.cellSize * (xCell + 0.5f)
+        val yTarget = level.y - (level.height * 0.5f) + level.cellSize * (yCell + 0.5f)
+
+        x += (xTarget - x) * 0.3f
+        y += (yTarget - y) * 0.3f
+        rotation -= rotation.degreesBetween(angle.toFloat()) * 0.3f
     }
 
     override fun onUpdate(engine: PulseEngine) { }

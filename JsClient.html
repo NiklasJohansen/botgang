@@ -6,6 +6,7 @@
 <body>
     <h1>JavaScript Client</h1>
     <label id="label"></label>
+    <input id="input" value="Name"/>
 </body>
 <script>
     const connection = new WebSocket('ws://127.0.0.1:55501');
@@ -18,6 +19,14 @@
         if (e.keyCode === 100) command = "MOVE_RIGHT"
     };
 
+    document.onkeydown = function (e) {
+        console.log(e.keyCode)
+        if (e.keyCode === 38) command = "ROTATE_UP"
+        if (e.keyCode === 40) command = "ROTATE_DOWN"
+        if (e.keyCode === 37)  command = "ROTATE_LEFT"
+        if (e.keyCode === 39) command = "ROTATE_RIGHT"
+    }
+
     connection.onmessage = function(event) {
         // Parse game state
         const gameState = JSON.parse(event.data);
@@ -25,7 +34,7 @@
 
         // Create and sent response
         const clientResponse = JSON.stringify({
-            clientName: "JS_Client",
+            clientName: document.getElementById("input").value,
             command: command
         });
         connection.send(clientResponse);

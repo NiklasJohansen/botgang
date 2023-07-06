@@ -10,5 +10,9 @@ enum class Command {
     MOVE_DOWN,
     MOVE_LEFT,
     MOVE_RIGHT,
+    ROTATE_UP,
+    ROTATE_DOWN,
+    ROTATE_LEFT,
+    ROTATE_RIGHT,
     IDLE
 }

@@ -64,9 +64,21 @@ class Level : SceneEntity(), Spatial, Renderable
         cells = Array(xCells * yCells) { if (Random.nextBoolean()) EMPTY else WALL }
         width = xCells * cellSize
         height = yCells * cellSize
+
+        for (i in 0 until xCells)
+        {
+            cells[i] = WALL
+            cells[(yCells - 1) * xCells + i] = WALL
+        }
+
+        for (i in 0 until yCells)
+        {
+            cells[i * xCells] = WALL
+            cells[i * xCells + xCells - 1] = WALL
+        }
     }
 
-    fun canMoveTo(x: Int, y: Int): Boolean =
+    fun isWalkable(x: Int, y: Int): Boolean =
         x >= 0 && x < xCells && y >= 0 && y < yCells && cells[y * xCells + x] == EMPTY
 
     fun getFreeSpot(): Pair<Int, Int>
