@@ -63,14 +63,7 @@ class Server : SceneSystem()
         server.broadcast(packet)
     }
 
-    override fun onRender(engine: PulseEngine)
-    {
-        // Draw player names
-        engine.scene.getAllEntitiesOfType<Bot>()?.forEachIndexed { index, player ->
-            engine.gfx.mainSurface.setDrawColor(player.color)
-            engine.gfx.mainSurface.drawText(text = player.name, x = 10f, y = 20f + 30f * index, fontSize = 20f, yOrigin = 0.5f)
-        }
-    }
+    override fun onRender(engine: PulseEngine) { }
 
     override fun onStop(engine: PulseEngine) { shutdown() }
 

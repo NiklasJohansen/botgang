@@ -14,6 +14,9 @@ class Level : SceneEntity(), Spatial, Renderable
     var xCells   = 20;  set (value) { field = value; updateDimensions() }
     var yCells   = 20;  set (value) { field = value; updateDimensions() }
 
+    var wallColor = Color(0.1f, 0.1f, 0.1f)
+    var floorColor = Color(0.4f, 0.4f, 0.4f)
+
     override var width = xCells * cellSize
     override var height = yCells * cellSize
     override var rotation = 0f
@@ -28,17 +31,30 @@ class Level : SceneEntity(), Spatial, Renderable
         val xStart = x - xCells * cellSize * 0.5f
         val yStart = y - yCells * cellSize * 0.5f
 
+        // Background
+        surface.setDrawColor(floorColor)
+        surface.drawTexture(Texture.BLANK, x, y, width, height, xOrigin = 0.5f, yOrigin = 0.5f)
+
         for (yi in 0 until yCells)
         {
             for (xi in 0 until xCells)
             {
                 val cell = cells[yi * xCells + xi]
                 val color = when (cell) {
-                    EMPTY -> Color.WHITE
-                    WALL -> Color.BLACK
+                    EMPTY -> continue
+                    WALL -> wallColor
                 }
                 surface.setDrawColor(color)
-                surface.drawTexture(Texture.BLANK, xStart + xi * cellSize, yStart + yi * cellSize, cellSize, cellSize)
+                surface.drawTexture(
+                    texture = Texture.BLANK,
+                    x = xStart + xi * cellSize + cellSize * 0.5f,
+                    y = yStart + yi * cellSize + cellSize * 0.5f,
+                    width = cellSize * 1.08f,
+                    height = cellSize * 1.08f,
+                    xOrigin = 0.5f,
+                    yOrigin = 0.5f,
+                    cornerRadius = 4f
+                )
             }
         }
     }
