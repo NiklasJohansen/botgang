@@ -13,18 +13,21 @@
     let command = "IDLE"
 
     document.onkeypress = function (e) {
-        if (e.keyCode === 119) command = "MOVE_UP"
-        if (e.keyCode === 115) command = "MOVE_DOWN"
-        if (e.keyCode === 97)  command = "MOVE_LEFT"
-        if (e.keyCode === 100) command = "MOVE_RIGHT"
+        if (e.keyCode === 119) command = "MOVE_UP"     // W
+        if (e.keyCode === 115) command = "MOVE_DOWN"   // S
+        if (e.keyCode === 97)  command = "MOVE_LEFT"   // A
+        if (e.keyCode === 100) command = "MOVE_RIGHT"  // D
+        if (e.keyCode === 101) command = "PICK_UP"     // E
+        if (e.keyCode === 113) command = "DROP"        // Q
+        if (e.keyCode === 32) command = "USE"          // SPACE
+        if (e.keyCode === 109) command = "MOVE_TO_1_1" // M
     };
 
     document.onkeydown = function (e) {
-        console.log(e.keyCode)
-        if (e.keyCode === 38) command = "ROTATE_UP"
-        if (e.keyCode === 40) command = "ROTATE_DOWN"
+        if (e.keyCode === 38)  command = "ROTATE_UP"
+        if (e.keyCode === 40)  command = "ROTATE_DOWN"
         if (e.keyCode === 37)  command = "ROTATE_LEFT"
-        if (e.keyCode === 39) command = "ROTATE_RIGHT"
+        if (e.keyCode === 39)  command = "ROTATE_RIGHT"
     }
 
     connection.onmessage = function(event) {
@@ -44,4 +47,3 @@
     }
 </script>
 </html>
-

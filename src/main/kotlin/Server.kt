@@ -1,5 +1,9 @@
 import core.server.GameServer
 import data.OutgoingPacket
+import entities.Bot
+import entities.Bullet
+import entities.Client
+import entities.Level
 import no.njoh.pulseengine.core.PulseEngine
 import no.njoh.pulseengine.core.scene.SceneEntity.Companion.DEAD
 import no.njoh.pulseengine.core.scene.SceneSystem
@@ -53,7 +57,8 @@ class Server : SceneSystem()
 
     private fun tick(engine: PulseEngine)
     {
-        engine.scene.forEachEntityOfType<Bot>{ it.onServerTick(engine) }
+        engine.scene.forEachEntityOfType<Bot> { if (it.isAlive) it.onServerTick(engine) }
+        engine.scene.forEachEntityOfType<Bullet> { it.onServerTick(engine) }
 
         val packet = OutgoingPacket().apply()
         {

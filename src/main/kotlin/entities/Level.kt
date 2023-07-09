@@ -1,4 +1,6 @@
-import Level.CellType.*
+package entities
+
+import entities.Level.CellType.*
 import no.njoh.pulseengine.core.PulseEngine
 import no.njoh.pulseengine.core.asset.types.Texture
 import no.njoh.pulseengine.core.graphics.Surface2D
@@ -24,7 +26,7 @@ class Level : SceneEntity(), Spatial, Renderable
     override var y = 0f
     override var z = 0f
 
-    private var cells = Array(xCells * yCells) { EMPTY }
+    var cells = Array(xCells * yCells) { EMPTY }
 
     override fun onRender(engine: PulseEngine, surface: Surface2D)
     {
@@ -91,6 +93,11 @@ class Level : SceneEntity(), Spatial, Renderable
                 return Pair(x, y)
         }
     }
+
+    fun getWorldPos(xCell: Int, yCell: Int): Pair<Float, Float> = Pair(
+        x - width * 0.5f + xCell * cellSize + cellSize * 0.5f,
+        y - height * 0.5f + yCell * cellSize + cellSize * 0.5f
+    )
 
     enum class CellType { EMPTY, WALL }
 }
