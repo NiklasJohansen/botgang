@@ -1,131 +1,132 @@
 import entities.Level
 import java.util.*
+import kotlin.math.abs
 
 class NewPathfinder
 {
-    private val OPEN_LIST_ID = 1
-    private val CLOSED_LIST_ID = 2
-    private val INVALID = -1
-    private val MOVEMENT_COST = 10
-
-    private var currentNode: Vector? = null
-    private var targetNode: Vector? = null
-    private var mapSize: Vector? = null
-    private var dataMap: Array<Array<IntArray>> = emptyArray()
-    private var pathFound = false
+    private var width = 0
+    private var height = 0
 
     fun getPath(level: Level, xStart: Int, yStart: Int, xTarget: Int, yTarget: Int): Stack<Vector>? {
-        val start = Vector(xStart, yStart)
-        val target = Vector(xTarget, yTarget)
-        if (start == target)
+        if (xStart == xTarget && yStart == yTarget)
             return null
 
-        mapSize = Vector(level.xCells, level.yCells)
-        targetNode = Vector(target.x, target.y)
-        currentNode = Vector(start.x, start.y)
-        dataMap = Array(mapSize!!.y) { Array(mapSize!!.x) { IntArray(6) } } // 0:parent_x, 1:parent_y,  2:F-Cost,  3:G-Cost,  4:H (Heuristic), 5:list(1=open, 2=closed)
-        dataMap[start.y][start.x][0] = INVALID
-        pathFound = false
+        width = level.xCells
+        height = level.yCells
 
-        while (!pathFound)
+        var xNode = xStart
+        var yNode = yStart
+        val map = IntArray(width * height * 6).also { it[X_PARENT, xStart, yStart] = INVALID }
+
+        while (true)
         {
             for (dir in DIRECTIONS)
             {
-                processNode(level, dir)
-                if (pathFound)
-                    break
+                val xTest = xNode + dir.x
+                val yTest = yNode + dir.y
+                if (!level.isWalkable(xTest, yTest))
+                    continue
+
+                val targetFound = processNode(map, xNode, yNode, xTarget, yTarget, xTest, yTest)
+                if (targetFound)
+                    return getBackTracedPathFrom(map, xTarget, yTarget)
             }
 
-            if (!pathFound)
-            {
-                dataMap[currentNode!!.y][currentNode!!.x][5] = CLOSED_LIST_ID // Adds node to closed list
-                currentNode = findLowestFCost()
-                if (currentNode!!.x == INVALID) // If findLowestFCost return INVALID the open list is empty
-                    return null
-            }
+            map[LIST, xNode, yNode] = CLOSED_LIST_ID // Add node to closed list
+
+            val (x, y) = findOpenNodeWithLowestFCost(map) ?: return null // No more nodes to process, no path found
+            xNode = x
+            yNode = y
         }
-
-        return backtracePath()
     }
 
-    private fun backtracePath(): Stack<Vector>
+    private fun processNode(map: IntArray, xNode: Int, yNode: Int, xTarget: Int, yTarget: Int, xTest: Int, yTest: Int): Boolean
+    {
+        if (xTest == xTarget && yTest == yTarget)
+        {
+            map[X_PARENT, xTest, yTest] = xNode
+            map[Y_PARENT, xTest, yTest] = yNode
+            return true // Target found
+        }
+
+        val list = map[LIST, xTest, yTest]
+        if (list == OPEN_LIST_ID)
+        {
+            val newGCost = map[G_COST, xNode, yNode] + MOVEMENT_COST
+            if (newGCost < map[G_COST, xTest, yTest])
+            {
+                map[X_PARENT, xTest, yTest] = xNode
+                map[Y_PARENT, xTest, yTest] = yNode
+                map[G_COST,   xTest, yTest] = newGCost
+                map[F_COST,   xTest, yTest] = newGCost + map[HEURISTIC, xTest, yTest]
+            }
+        }
+        else if (list != CLOSED_LIST_ID)
+        {
+            val newGCost = map[G_COST, xNode, yNode] + MOVEMENT_COST
+            val heuristic = abs(xTest - xTarget) + abs(yTest - yTarget)
+            val newFCost = newGCost + heuristic
+            map[X_PARENT,  xTest, yTest] = xNode
+            map[Y_PARENT,  xTest, yTest] = yNode
+            map[G_COST,    xTest, yTest] = newGCost
+            map[HEURISTIC, xTest, yTest] = heuristic
+            map[F_COST,    xTest, yTest] = newFCost
+            map[LIST,      xTest, yTest] = OPEN_LIST_ID
+        }
+
+        return false
+    }
+
+    private fun getBackTracedPathFrom(map: IntArray, x: Int, y: Int): Stack<Vector>
     {
         val path = Stack<Vector>()
-        var parent = Vector(targetNode!!.x, targetNode!!.y)
-        while (dataMap[parent.y][parent.x][0] != INVALID)
+        var parent = Vector(x, y)
+        while (map[X_PARENT, parent.x, parent.y] != INVALID)
         {
             path.push(parent)
-            parent = Vector(dataMap[parent.y][parent.x][0], dataMap[parent.y][parent.x][1])
+            parent = Vector(x = map[X_PARENT, parent.x, parent.y], y = map[Y_PARENT, parent.x, parent.y])
         }
         return path
     }
 
-    private fun processNode(level: Level, dir: Vector)
+    private fun findOpenNodeWithLowestFCost(map: IntArray): Vector?
     {
-        val currX = currentNode!!.x
-        val currY = currentNode!!.y
-        val testX = currX + dir.x
-        val testY = currY + dir.y
-        if (testX < 0 || testX >= dataMap[0].size || testY < 0 || testY >= dataMap.size)
-            return
-
-        if (!level.isWalkable(testX, testY))
-            return
-
-        if (targetNode!!.x == testX && targetNode!!.y == testY)
+        var index = 0
+        var minIndex = INVALID
+        var minCost = Int.MAX_VALUE
+        while (index < map.size)
         {
-            dataMap[targetNode!!.y][targetNode!!.x][0] = currentNode!!.x
-            dataMap[targetNode!!.y][targetNode!!.x][1] = currentNode!!.y
-            pathFound = true
-            return
-        }
-
-        if (dataMap[testY][testX][5] == OPEN_LIST_ID) // In open list
-        {
-            val newGCost = dataMap[currY][currX][3] + MOVEMENT_COST // New G-Cost
-            if (newGCost < dataMap[testY][testX][3]) // Less than last G-Cost?
+            val cost = map[index + F_COST]
+            if (cost < minCost && map[index + LIST] == OPEN_LIST_ID)
             {
-                dataMap[testY][testX][0] = currX // Set parents x position
-                dataMap[testY][testX][1] = currY // Set parents y position
-                dataMap[testY][testX][3] = newGCost // updates G-Cost
-                dataMap[testY][testX][2] = newGCost + dataMap[testY][testX][4] // calculates F-Cost
+                minIndex = index
+                minCost = cost
             }
+            index += 6
         }
-        else if (dataMap[testY][testX][5] != CLOSED_LIST_ID) // not in closed list
-        {
-            dataMap[testY][testX][0] = currX // Set parents x position
-            dataMap[testY][testX][1] = currY // Set parents y position
-            dataMap[testY][testX][3] = dataMap[currY][currX][3] + MOVEMENT_COST // calculates new G-Cost
-            dataMap[testY][testX][4] =
-                Math.abs(testX - targetNode!!.x) + Math.abs(testY - targetNode!!.y) // calculates H
-            dataMap[testY][testX][2] = dataMap[testY][testX][3] + dataMap[testY][testX][4] // calculates F-Cost
-            dataMap[testY][testX][5] = OPEN_LIST_ID // add node to open list
-        }
+        return if (minIndex == INVALID) null else Vector(minIndex / 6 % width, minIndex / 6 / width)
     }
 
-    private fun findLowestFCost(): Vector
-    {
-        var X = INVALID
-        var Y = INVALID
-        var smalestF = Int.MAX_VALUE
-        for (y in 0 until mapSize!!.y)
-        {
-            for (x in 0 until mapSize!!.x)
-            {
-                if (dataMap[y][x][2] <= smalestF && dataMap[y][x][5] == OPEN_LIST_ID)
-                {
-                    X = x
-                    Y = y
-                    smalestF = dataMap[y][x][2]
-                }
-            }
-        }
-        return Vector(X, Y)
-    }
+    private operator fun IntArray.get(prop: Int, x: Int, y: Int) = this[(y * width + x) * 6 + prop]
+    private operator fun IntArray.set(prop: Int, x: Int, y: Int, value: Int) { this[(y * width + x) * 6 + prop] = value }
 
     companion object
     {
         val DIRECTIONS = arrayOf(Vector(-1, 0), Vector(1, 0), Vector(0, -1), Vector(0, 1))
+
+        // Props
+        private const val X_PARENT  = 0
+        private const val Y_PARENT  = 1
+        private const val F_COST    = 2
+        private const val G_COST    = 3
+        private const val HEURISTIC = 4
+        private const val LIST      = 5
+
+        // Values
+        private const val OPEN_LIST_ID   =  1
+        private const val CLOSED_LIST_ID =  2
+        private const val INVALID        = -1
+        private const val MOVEMENT_COST  = 10
     }
 }
 
