@@ -1,5 +1,6 @@
 package data
-class IncomingPacket
+
+class ClientResponse
 {
     var clientName: String? = null
     var command = "IDLE"

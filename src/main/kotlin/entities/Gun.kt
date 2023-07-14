@@ -1,16 +1,17 @@
 package entities
 
+import data.PickupState
 import no.njoh.pulseengine.core.PulseEngine
 import no.njoh.pulseengine.core.asset.types.Texture
 import no.njoh.pulseengine.core.graphics.Surface2D
 
 class Gun : Pickup()
 {
-    var bullets = 3
+    var bulletCount = 3
 
     override fun use(engine: PulseEngine)
     {
-        if (bullets > 0)
+        if (bulletCount > 0)
         {
             var xDir = 0
             var yDir = 0
@@ -30,7 +31,7 @@ class Gun : Pickup()
             bullet.ownerId = ownerId
             engine.scene.addEntity(bullet)
 
-            bullets--
+            bulletCount--
         }
     }
 
@@ -64,7 +65,7 @@ class Gun : Pickup()
             cornerRadius = 4f
         )
 
-        for (i in 0 until bullets)
+        for (i in 0 until bulletCount)
         {
             // Tip
             surface.setDrawColor(0.7f, 0.7f, 0.7f)
@@ -75,7 +76,7 @@ class Gun : Pickup()
                 width = width * 0.07f,
                 height = height * 0.1f,
                 rot = rotation + 80,
-                xOrigin = 5.4f + (bullets - i - 1) * 1.85f,
+                xOrigin = 5.4f + (bulletCount - i - 1) * 1.85f,
                 yOrigin = 1.5f,
                 cornerRadius = 3f
             )
@@ -89,10 +90,21 @@ class Gun : Pickup()
                 width = width * 0.08f,
                 height = height * 0.22f,
                 rot = rotation + 80,
-                xOrigin = 4.8f + (bullets - i - 1) * 1.6f,
+                xOrigin = 4.8f + (bulletCount - i - 1) * 1.6f,
                 yOrigin = 1.5f,
                 cornerRadius = 0f
             )
         }
     }
+
+    override fun getState() = GunPickUpState(type = "GUN", id, xCell, yCell, ownerId, bulletCount)
+
+    class GunPickUpState(
+        type: String,
+        id: Long,
+        x: Int,
+        y: Int,
+        ownerId: Long?,
+        val bulletCount: Int
+    ) : PickupState(type, id, x, y, ownerId)
 }

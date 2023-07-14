@@ -1,5 +1,6 @@
 package entities
 
+import data.BulletState
 import no.njoh.pulseengine.core.PulseEngine
 import no.njoh.pulseengine.core.graphics.Surface2D
 import no.njoh.pulseengine.core.scene.SceneEntity
@@ -25,21 +26,21 @@ class Bullet : SceneEntity(), Initiable, Updatable, Renderable, Spatial
 
     fun onServerTick(engine: PulseEngine)
     {
-        val level = engine.scene.getFirstEntityOfType<Level>() ?: return
         val xNew = xCell + xVel
         val yNew = yCell + yVel
+        val level = engine.scene.getFirstEntityOfType<Level>() ?: return
         if (level.isWalkable(xNew, yNew))
         {
             xCell = xNew
             yCell = yNew
         }
-        else set(DEAD)
+        else this.set(DEAD)
 
         engine.scene.forEachEntityOfType<Bot>
         {
             if (it.xCell == xCell && it.yCell == yCell && it.id != ownerId)
             {
-                it.isAlive = false
+                it.kill(engine)
                 this.set(DEAD)
             }
         }
@@ -70,4 +71,6 @@ class Bullet : SceneEntity(), Initiable, Updatable, Renderable, Spatial
         surface.setDrawColor(1f, 1f, 0f)
         surface.drawLine(x0, y0, x1, y1)
     }
+
+    fun getState() = BulletState(id, xCell, yCell, xVel, yVel, ownerId)
 }

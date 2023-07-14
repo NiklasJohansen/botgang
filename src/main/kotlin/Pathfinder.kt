@@ -2,7 +2,7 @@ import entities.Level
 import java.util.*
 import kotlin.math.abs
 
-class NewPathfinder
+class Pathfinder
 {
     private var width = 0
     private var height = 0
@@ -13,10 +13,9 @@ class NewPathfinder
 
         width = level.xCells
         height = level.yCells
-
+        val map = IntArray(width * height * 6).also { it[X_PARENT, xStart, yStart] = INVALID }
         var xNode = xStart
         var yNode = yStart
-        val map = IntArray(width * height * 6).also { it[X_PARENT, xStart, yStart] = INVALID }
 
         while (true)
         {
@@ -63,8 +62,8 @@ class NewPathfinder
         }
         else if (list != CLOSED_LIST_ID)
         {
-            val newGCost = map[G_COST, xNode, yNode] + MOVEMENT_COST
             val heuristic = abs(xTest - xTarget) + abs(yTest - yTarget)
+            val newGCost = map[G_COST, xNode, yNode] + MOVEMENT_COST
             val newFCost = newGCost + heuristic
             map[X_PARENT,  xTest, yTest] = xNode
             map[Y_PARENT,  xTest, yTest] = yNode

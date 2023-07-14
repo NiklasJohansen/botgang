@@ -1,9 +1,7 @@
 import core.server.GameServer
-import data.OutgoingPacket
-import entities.Bot
-import entities.Bullet
-import entities.Client
-import entities.Level
+import data.GameState
+import data.NewBotResponse
+import entities.*
 import no.njoh.pulseengine.core.PulseEngine
 import no.njoh.pulseengine.core.scene.SceneEntity.Companion.DEAD
 import no.njoh.pulseengine.core.scene.SceneSystem
@@ -16,6 +14,7 @@ class Server : SceneSystem()
 
     private var server = GameServer(Client::class.java)
     private var lastTickTime = 0L
+    private var tickCount = 0L
 
     override fun onStart(engine: PulseEngine)
     {
@@ -37,7 +36,6 @@ class Server : SceneSystem()
 
     private fun onConnected(client: Client, engine: PulseEngine)
     {
-        println("Connected: ${client.ipAddress}")
         val bot = Bot()
         bot.client = client
         engine.scene.getFirstEntityOfType<Level>()?.let()
@@ -47,25 +45,41 @@ class Server : SceneSystem()
             bot.yCell = y
         }
         engine.scene.addEntity(bot)
+        client.send(NewBotResponse(bot.id))
+        println("Connected: ${client.ipAddress}")
     }
 
     private fun onDisconnected(client: Client, engine: PulseEngine)
     {
+        engine.scene.getAllEntitiesOfType<Bot>()?.firstOrNull { it.client === client }?.let()
+        {
+            it.kill(engine)
+            it.set(DEAD)
+        }
         println("Disconnected: ${client.ipAddress}")
-        engine.scene.getAllEntitiesOfType<Bot>()?.firstOrNull { it.client === client }?.set(DEAD)
     }
 
     private fun tick(engine: PulseEngine)
     {
-        engine.scene.forEachEntityOfType<Bot> { if (it.isAlive) it.onServerTick(engine) }
+        // Update entities
+        engine.scene.forEachEntityOfType<Bot> { it.onServerTick(engine) }
         engine.scene.forEachEntityOfType<Bullet> { it.onServerTick(engine) }
 
-        val packet = OutgoingPacket().apply()
-        {
-            timestamp = System.currentTimeMillis().toString()
-        }
+        // Send current game state to all clients
+        distributeGameState(engine)
+        tickCount++
+    }
 
-        server.broadcast(packet)
+    private fun distributeGameState(engine: PulseEngine)
+    {
+        val gameState = GameState(
+            tickNumber = tickCount,
+            level = engine.scene.getFirstEntityOfType<Level>()?.getState() ?: return,
+            bots = engine.scene.getAllEntitiesOfType<Bot>()?.map { it.getState() } ?: emptyList(),
+            pickups = engine.scene.getAllEntitiesOfType<Gun>()?.map { it.getState() } ?: emptyList(),
+            bullets = engine.scene.getAllEntitiesOfType<Bullet>()?.map { it.getState() } ?: emptyList(),
+        )
+        server.broadcast(gameState)
     }
 
     override fun onRender(engine: PulseEngine) { }

@@ -1,9 +1,10 @@
 package entities
 
-import NewPathfinder
+import Pathfinder
 import Vector
 import core.server.Player
-import data.IncomingPacket
+import data.BotState
+import data.ClientResponse
 import no.njoh.pulseengine.core.PulseEngine
 import no.njoh.pulseengine.core.asset.types.Font
 import no.njoh.pulseengine.core.asset.types.Texture
@@ -19,7 +20,7 @@ import getItemPickedUpBy
 import setDrawColor
 import kotlin.random.Random
 
-class Client : Player<IncomingPacket>(IncomingPacket::class.java)
+class Client : Player<ClientResponse>(ClientResponse::class.java)
 
 class Bot : SceneEntity(), Updatable, Spatial, Renderable
 {
@@ -46,6 +47,8 @@ class Bot : SceneEntity(), Updatable, Spatial, Renderable
 
     fun onServerTick(engine: PulseEngine)
     {
+        if (!isAlive) return
+
         client?.response?.clientName?.let { name = it.take(10) }
         client?.response?.command?.let()
         {
@@ -59,6 +62,9 @@ class Bot : SceneEntity(), Updatable, Spatial, Renderable
             xCell = pos.x
             yCell = pos.y
         }
+
+        // Clear command
+        client?.response?.command = "IDLE"
     }
 
     private fun handleCommand(engine: PulseEngine, command: String)
@@ -127,7 +133,7 @@ class Bot : SceneEntity(), Updatable, Spatial, Renderable
 
         val level = engine.scene.getFirstEntityOfType<Level>() ?: return
 
-        NewPathfinder().getPath(level, xCell, yCell, xTarget, yTarget)?.let { moves ->
+        Pathfinder().getPath(level, xCell, yCell, xTarget, yTarget)?.let { moves ->
             path.clear()
             path.addAll(moves)
         }
@@ -174,4 +180,12 @@ class Bot : SceneEntity(), Updatable, Spatial, Renderable
         surface.setDrawColor(1f, 1f, 1f, alpha)
         surface.drawText(name, x, namePlateHeight, font = font, fontSize = fontSize, xOrigin = 0.5f, yOrigin = 0.5f)
     }
+
+    fun kill(engine: PulseEngine)
+    {
+        isAlive = false
+        dropItem(engine)
+    }
+
+    fun getState() = BotState(name, id, xCell, yCell, angle, isAlive)
 }

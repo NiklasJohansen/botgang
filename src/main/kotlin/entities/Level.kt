@@ -1,5 +1,6 @@
 package entities
 
+import data.LevelState
 import entities.Level.CellType.*
 import no.njoh.pulseengine.core.PulseEngine
 import no.njoh.pulseengine.core.asset.types.Texture
@@ -7,11 +8,13 @@ import no.njoh.pulseengine.core.graphics.Surface2D
 import no.njoh.pulseengine.core.scene.SceneEntity
 import no.njoh.pulseengine.core.scene.interfaces.Renderable
 import no.njoh.pulseengine.core.scene.interfaces.Spatial
+import no.njoh.pulseengine.core.shared.annotations.ScnProp
 import no.njoh.pulseengine.core.shared.primitives.Color
 import kotlin.random.Random
 
 class Level : SceneEntity(), Spatial, Renderable
 {
+    var name     = "Unnamed Level"
     var cellSize = 20f; set (value) { field = value; updateDimensions() }
     var xCells   = 20;  set (value) { field = value; updateDimensions() }
     var yCells   = 20;  set (value) { field = value; updateDimensions() }
@@ -26,6 +29,7 @@ class Level : SceneEntity(), Spatial, Renderable
     override var y = 0f
     override var z = 0f
 
+    @ScnProp(hidden = true)
     var cells = Array(xCells * yCells) { EMPTY }
 
     override fun onRender(engine: PulseEngine, surface: Surface2D)
@@ -94,10 +98,17 @@ class Level : SceneEntity(), Spatial, Renderable
         }
     }
 
-    fun getWorldPos(xCell: Int, yCell: Int): Pair<Float, Float> = Pair(
+    fun getWorldPos(xCell: Int, yCell: Int) = Pair(
         x - width * 0.5f + xCell * cellSize + cellSize * 0.5f,
         y - height * 0.5f + yCell * cellSize + cellSize * 0.5f
     )
 
-    enum class CellType { EMPTY, WALL }
+    enum class CellType(val num: Int) { EMPTY(0), WALL(1) }
+
+    fun getState() = LevelState(
+        name = name,
+        width = xCells,
+        height = yCells,
+        cells = Array(yCells) { y -> IntArray(xCells) { x -> cells[y * xCells + x].num } }
+    )
 }
