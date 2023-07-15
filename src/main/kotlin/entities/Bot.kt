@@ -38,11 +38,12 @@ class Bot : SceneEntity(), Updatable, Spatial, Renderable
         blue = 0.5f + 0.5f * Random.nextFloat()
     )
 
-    var xCell = 0
-    var yCell = 0
+    var xCell = 0; set (value) { xCellLast = field; field = value; }
+    var yCell = 0; set (value) { yCellLast = field; field = value; }
+    var xCellLast = 0
+    var yCellLast = 0
     var angle = 0
     var isAlive = true
-    val path = mutableListOf<Vector>()
     var client: Client? = null
 
     fun onServerTick(engine: PulseEngine)
@@ -54,13 +55,6 @@ class Bot : SceneEntity(), Updatable, Spatial, Renderable
         {
             try { handleCommand(engine, it) }
             catch (e: Exception) { Logger.error("$name client sent a bad command: $it") }
-        }
-
-        if (path.isNotEmpty())
-        {
-            val pos = path.removeLast()
-            xCell = pos.x
-            yCell = pos.y
         }
 
         // Clear command
@@ -93,7 +87,6 @@ class Bot : SceneEntity(), Updatable, Spatial, Renderable
     {
         if (engine.scene.getFirstEntityOfType<Level>()?.isWalkable(xCell + xDir, yCell + yDir) == true)
         {
-            path.clear() // Stop moving along calculated path
             xCell += xDir
             yCell += yDir
         }
@@ -101,9 +94,18 @@ class Bot : SceneEntity(), Updatable, Spatial, Renderable
 
     private fun pickUpItem(engine: PulseEngine)
     {
+        // Drop item if already holding one
+        val holdingItem = engine.scene.getItemPickedUpBy(id)
+        if (holdingItem != null)
+        {
+            holdingItem.ownerId = INVALID_ID
+            holdingItem.xCell = xCell
+            holdingItem.yCell = yCell
+        }
+
         engine.scene.forEachEntityOfType<Pickup>()
         {
-            if (it.ownerId == INVALID_ID && it.xCell == xCell && it.yCell == yCell)
+            if (it.ownerId == INVALID_ID && it != holdingItem && it.xCell == xCell && it.yCell == yCell)
             {
                 it.ownerId = this.id
                 return
@@ -113,12 +115,17 @@ class Bot : SceneEntity(), Updatable, Spatial, Renderable
 
     private fun dropItem(engine: PulseEngine)
     {
-        engine.scene.getItemPickedUpBy(id)?.let()
+        val pickup = engine.scene.getItemPickedUpBy(id) ?: return // Not holding an item
+
+        engine.scene.forEachEntityOfType<Pickup>()
         {
-            it.ownerId = INVALID_ID
-            it.xCell = xCell
-            it.yCell = yCell
+            if (it.id != pickup.id && it.xCell == xCell && it.yCell == yCell)
+                return // Cannot drop item on top of another item // TODO what about disconnect?
         }
+
+        pickup.ownerId = INVALID_ID
+        pickup.xCell = xCell
+        pickup.yCell = yCell
     }
 
     private fun useItem(engine: PulseEngine)
@@ -134,8 +141,9 @@ class Bot : SceneEntity(), Updatable, Spatial, Renderable
         val level = engine.scene.getFirstEntityOfType<Level>() ?: return
 
         Pathfinder().getPath(level, xCell, yCell, xTarget, yTarget)?.let { moves ->
-            path.clear()
-            path.addAll(moves)
+            val (x, y) = moves.pop()
+            this.xCell = x
+            this.yCell = y
         }
     }
 

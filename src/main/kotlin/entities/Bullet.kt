@@ -22,6 +22,8 @@ class Bullet : SceneEntity(), Initiable, Updatable, Renderable, Spatial
     var yVel = 0
     var xCell = 0
     var yCell = 0
+    var xCellLast = 0
+    var yCellLast = 0
     var ownerId = INVALID_ID
 
     fun onServerTick(engine: PulseEngine)
@@ -31,16 +33,19 @@ class Bullet : SceneEntity(), Initiable, Updatable, Renderable, Spatial
         val level = engine.scene.getFirstEntityOfType<Level>() ?: return
         if (level.isWalkable(xNew, yNew))
         {
+            xCellLast = xCell
+            yCellLast = yCell
             xCell = xNew
             yCell = yNew
         }
         else this.set(DEAD)
 
-        engine.scene.forEachEntityOfType<Bot>
-        {
-            if (it.xCell == xCell && it.yCell == yCell && it.id != ownerId)
+        engine.scene.forEachEntityOfType<Bot> { bot ->
+            val isOnSameSpot = bot.xCell == xCell && bot.yCell == yCell
+            val passedThrough = bot.xCell == xCellLast && bot.yCell == yCellLast && bot.xCellLast == xCell && bot.yCellLast == yCell
+            if (bot.id != ownerId && (isOnSameSpot || passedThrough))
             {
-                it.kill(engine)
+                bot.kill(engine)
                 this.set(DEAD)
             }
         }

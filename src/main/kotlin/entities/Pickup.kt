@@ -1,6 +1,6 @@
 package entities
 
-import data.PickupState
+import data.GunState
 import no.njoh.pulseengine.core.PulseEngine
 import no.njoh.pulseengine.core.scene.SceneEntity
 import no.njoh.pulseengine.core.scene.interfaces.Initiable
@@ -59,5 +59,5 @@ abstract class Pickup : SceneEntity(), Initiable, Updatable, Renderable, Spatial
 
     abstract fun use(engine: PulseEngine)
 
-    abstract fun getState(): PickupState
+    abstract fun getState(): GunState
 }

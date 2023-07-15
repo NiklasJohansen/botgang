@@ -5,22 +5,22 @@ import entities.Level.CellType.*
 import no.njoh.pulseengine.core.PulseEngine
 import no.njoh.pulseengine.core.asset.types.Texture
 import no.njoh.pulseengine.core.graphics.Surface2D
+import no.njoh.pulseengine.core.input.Key.*
+import no.njoh.pulseengine.core.input.Mouse.LEFT
 import no.njoh.pulseengine.core.scene.SceneEntity
+import no.njoh.pulseengine.core.scene.SceneState
 import no.njoh.pulseengine.core.scene.interfaces.Renderable
 import no.njoh.pulseengine.core.scene.interfaces.Spatial
 import no.njoh.pulseengine.core.shared.annotations.ScnProp
 import no.njoh.pulseengine.core.shared.primitives.Color
-import kotlin.random.Random
+import kotlin.math.max
 
 class Level : SceneEntity(), Spatial, Renderable
 {
-    var name     = "Unnamed Level"
-    var cellSize = 20f; set (value) { field = value; updateDimensions() }
-    var xCells   = 20;  set (value) { field = value; updateDimensions() }
-    var yCells   = 20;  set (value) { field = value; updateDimensions() }
-
-    var wallColor = Color(0.1f, 0.1f, 0.1f)
-    var floorColor = Color(0.4f, 0.4f, 0.4f)
+    @ScnProp(min = 1f)      var cellSize = 20f
+    @ScnProp(min = 1f)      var xCells = 20
+    @ScnProp(min = 1f)      var yCells = 20
+    @ScnProp(hidden = true) var cells = Array(xCells * yCells) { FLOOR }
 
     override var width = xCells * cellSize
     override var height = yCells * cellSize
@@ -29,73 +29,102 @@ class Level : SceneEntity(), Spatial, Renderable
     override var y = 0f
     override var z = 0f
 
-    @ScnProp(hidden = true)
-    var cells = Array(xCells * yCells) { EMPTY }
+    var name = "Unnamed Level"
+    var wallColor = Color(0.1f, 0.1f, 0.1f)
+    var floorColor = Color(0.4f, 0.4f, 0.4f)
+    var spawnColor = Color(0.4f, 0.4f, 0.4f)
+
+    private var editType = FLOOR
 
     override fun onRender(engine: PulseEngine, surface: Surface2D)
     {
+        if (xCells * yCells != cells.size)
+            resizeLevel()
+
         val xStart = x - xCells * cellSize * 0.5f
         val yStart = y - yCells * cellSize * 0.5f
 
-        // Background
-        surface.setDrawColor(floorColor)
-        surface.drawTexture(Texture.BLANK, x, y, width, height, xOrigin = 0.5f, yOrigin = 0.5f)
-
-        for (yi in 0 until yCells)
+        for (cellType in CellType.values())
         {
-            for (xi in 0 until xCells)
+            for (yi in 0 until yCells)
             {
-                val cell = cells[yi * xCells + xi]
-                val color = when (cell) {
-                    EMPTY -> continue
-                    WALL -> wallColor
+                for (xi in 0 until xCells)
+                {
+                    if (cells[yi * xCells + xi] != cellType)
+                        continue
+
+                    val color = when (cellType)
+                    {
+                        FLOOR -> floorColor
+                        SPAWN -> spawnColor
+                        WALL -> wallColor
+                    }
+                    surface.setDrawColor(color)
+                    surface.drawTexture(
+                        texture = Texture.BLANK,
+                        x = xStart + (xi + 0.5f) * cellSize,
+                        y = yStart + (yi + 0.5f) * cellSize,
+                        width = cellSize * 1.08f,
+                        height = cellSize * 1.08f,
+                        xOrigin = 0.5f,
+                        yOrigin = 0.5f,
+                        cornerRadius = 4f
+                    )
                 }
-                surface.setDrawColor(color)
-                surface.drawTexture(
-                    texture = Texture.BLANK,
-                    x = xStart + xi * cellSize + cellSize * 0.5f,
-                    y = yStart + yi * cellSize + cellSize * 0.5f,
-                    width = cellSize * 1.08f,
-                    height = cellSize * 1.08f,
-                    xOrigin = 0.5f,
-                    yOrigin = 0.5f,
-                    cornerRadius = 4f
-                )
+            }
+        }
+
+
+
+        if (engine.scene.state == SceneState.STOPPED && isNot(EDITABLE))
+        {
+            val x = ((engine.input.xWorldMouse - x + width * 0.5f) / cellSize).toInt()
+            val y = ((engine.input.yWorldMouse - y + height * 0.5f) / cellSize).toInt()
+            if (x >= 0 && x < xCells && y >= 0 && y < yCells)
+            {
+                if (engine.input.isPressed(K_1)) editType = FLOOR
+                if (engine.input.isPressed(K_2)) editType = SPAWN
+                if (engine.input.isPressed(K_3)) editType = WALL
+                if (engine.input.isPressed(LEFT))
+                    cells[y * xCells + x] = editType
             }
         }
     }
 
-    private fun updateDimensions()
+    private fun resizeLevel()
     {
-        cells = Array(xCells * yCells) { if (Random.nextBoolean()) EMPTY else WALL }
+        cells = Array(xCells * yCells) { FLOOR }
         width = xCells * cellSize
         height = yCells * cellSize
-
-        for (i in 0 until xCells)
-        {
-            cells[i] = WALL
-            cells[(yCells - 1) * xCells + i] = WALL
-        }
-
-        for (i in 0 until yCells)
-        {
-            cells[i * xCells] = WALL
-            cells[i * xCells + xCells - 1] = WALL
-        }
     }
 
     fun isWalkable(x: Int, y: Int): Boolean =
-        x >= 0 && x < xCells && y >= 0 && y < yCells && cells[y * xCells + x] == EMPTY
+        x >= 0 && x < xCells && y >= 0 && y < yCells && cells[y * xCells + x].num < 2
 
-    fun getFreeSpot(): Pair<Int, Int>
+    fun getFreeSpot(engine: PulseEngine): Pair<Int, Int>
     {
-        while (true)
+        val bots = engine.scene.getAllEntitiesOfType<Bot>()
+        val xCenter = (bots?.sumOf { it.xCell } ?: 0) / max(bots?.size ?: 1, 1)
+        val yCenter = (bots?.sumOf { it.yCell } ?: 0) / max(bots?.size ?: 1, 1)
+
+        var distMax = Int.MIN_VALUE
+        var xMax = 1
+        var yMax = 1
+        for (yi in 0 until yCells)
         {
-            val x = Random.nextInt(xCells)
-            val y = Random.nextInt(yCells)
-            if (cells[y * xCells + x] == EMPTY)
-                return Pair(x, y)
+            for (xi in 0 until xCells)
+            {
+                val dist = (xCenter - xi) * (xCenter - xi) + (yCenter - yi) * (yCenter - yi)
+                if (cells[yi * xCells + xi] == SPAWN && dist > distMax && bots?.any { it.xCell == xi && it.yCell == yi } != true)
+                {
+                    distMax = dist
+                    xMax = xi
+                    yMax = yi
+                }
+            }
         }
+
+        return Pair(xMax, yMax)
     }
 
     fun getWorldPos(xCell: Int, yCell: Int) = Pair(
@@ -103,7 +132,12 @@ class Level : SceneEntity(), Spatial, Renderable
         y - height * 0.5f + yCell * cellSize + cellSize * 0.5f
     )
 
-    enum class CellType(val num: Int) { EMPTY(0), WALL(1) }
+    enum class CellType(val num: Int)
+    {
+        FLOOR(0),
+        SPAWN(1),
+        WALL(2)
+    }
 
     fun getState() = LevelState(
         name = name,

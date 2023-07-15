@@ -40,9 +40,11 @@ class Server : SceneSystem()
         bot.client = client
         engine.scene.getFirstEntityOfType<Level>()?.let()
         {
-            val (x,y) = it.getFreeSpot()
+            val (x,y) = it.getFreeSpot(engine)
             bot.xCell = x
             bot.yCell = y
+            bot.xCellLast = x
+            bot.yCellLast = y
         }
         engine.scene.addEntity(bot)
         client.send(NewBotResponse(bot.id))

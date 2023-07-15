@@ -4,7 +4,7 @@ data class GameState(
     var tickNumber: Long,
     var level: LevelState,
     var bots: List<BotState>,
-    var pickups: List<PickupState>,
+    var pickups: List<GunState>,
     var bullets: List<BulletState>
 )
 
@@ -24,12 +24,13 @@ data class BotState(
     val isAlive: Boolean
 )
 
-open class PickupState(
+open class GunState(
     val type: String,
     val id: Long,
     val x: Int,
     val y: Int,
     val ownerId: Long?,
+    val bulletCount: Int
 )
 
 data class BulletState(

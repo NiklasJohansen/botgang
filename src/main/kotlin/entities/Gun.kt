@@ -1,6 +1,6 @@
 package entities
 
-import data.PickupState
+import data.GunState
 import no.njoh.pulseengine.core.PulseEngine
 import no.njoh.pulseengine.core.asset.types.Texture
 import no.njoh.pulseengine.core.graphics.Surface2D
@@ -26,6 +26,8 @@ class Gun : Pickup()
             val bullet = Bullet()
             bullet.xCell = xCell
             bullet.yCell = yCell
+            bullet.xCellLast = xCell
+            bullet.yCellLast = yCell
             bullet.xVel = xDir
             bullet.yVel = yDir
             bullet.ownerId = ownerId
@@ -97,14 +99,5 @@ class Gun : Pickup()
         }
     }
 
-    override fun getState() = GunPickUpState(type = "GUN", id, xCell, yCell, ownerId, bulletCount)
-
-    class GunPickUpState(
-        type: String,
-        id: Long,
-        x: Int,
-        y: Int,
-        ownerId: Long?,
-        val bulletCount: Int
-    ) : PickupState(type, id, x, y, ownerId)
+    override fun getState() = GunState(type = "GUN", id, xCell, yCell, ownerId, bulletCount)
 }
