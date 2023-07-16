@@ -46,7 +46,7 @@ abstract class Pickup : SceneEntity(), Initiable, Updatable, Renderable, Spatial
 
     private fun setPosition(engine: PulseEngine)
     {
-        val level = engine.scene.getFirstEntityOfType<Level>() ?: return
+        val level = engine.scene.getEntityOfType<Level>(parentId) ?: return
         val xClosestCell = (x - (level.x - level.width * 0.5f)).coerceIn(0f, level.width) / level.cellSize
         val yClosestCell = (y - (level.y - level.height * 0.5f)).coerceIn(0f, level.height) / level.cellSize
         xCell = xClosestCell.toInt()

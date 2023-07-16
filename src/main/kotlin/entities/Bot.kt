@@ -85,7 +85,7 @@ class Bot : SceneEntity(), Updatable, Spatial, Renderable
 
     private fun move(engine: PulseEngine, xDir: Int, yDir: Int)
     {
-        if (engine.scene.getFirstEntityOfType<Level>()?.isWalkable(xCell + xDir, yCell + yDir) == true)
+        if (engine.scene.getActiveLevel()?.isWalkable(xCell + xDir, yCell + yDir) == true)
         {
             xCell += xDir
             yCell += yDir
@@ -149,7 +149,7 @@ class Bot : SceneEntity(), Updatable, Spatial, Renderable
 
     override fun onFixedUpdate(engine: PulseEngine)
     {
-        val level = engine.scene.getFirstEntityOfType<Level>() ?: return
+        val level = engine.scene.getActiveLevel() ?: return
         val (xTarget, yTarget) = level.getWorldPos(xCell, yCell)
         x += (xTarget - x) * 0.3f
         y += (yTarget - y) * 0.3f

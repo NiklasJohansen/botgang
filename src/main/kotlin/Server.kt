@@ -11,6 +11,9 @@ class Server : SceneSystem()
 {
     var port = 55500
     var tickRate = 10
+    var maxBotCount = 8
+    var activeLevel = -1L
+    var levels = longArrayOf()
 
     private var server = GameServer(Client::class.java)
     private var lastTickTime = 0L
@@ -36,6 +39,15 @@ class Server : SceneSystem()
 
     private fun onConnected(client: Client, engine: PulseEngine)
     {
+        if (server.players.size > maxBotCount)
+        {
+            client.disconnect() // Server full
+            return
+        }
+
+        val level = engine.scene.getActiveLevel() ?: return
+        val (xCell,yCell) = level.getSpawnPoint(engine)
+        val (x,y) = level.getWorldPos(xCell, yCell)
         val bot = Bot()
         bot.client = client
         engine.scene.getFirstEntityOfType<Level>()?.let()
@@ -76,12 +88,47 @@ class Server : SceneSystem()
     {
         val gameState = GameState(
             tickNumber = tickCount,
-            level = engine.scene.getFirstEntityOfType<Level>()?.getState() ?: return,
+            level = engine.scene.getActiveLevel()?.getState() ?: return,
             bots = engine.scene.getAllEntitiesOfType<Bot>()?.map { it.getState() } ?: emptyList(),
             pickups = engine.scene.getAllEntitiesOfType<Gun>()?.map { it.getState() } ?: emptyList(),
             bullets = engine.scene.getAllEntitiesOfType<Bullet>()?.map { it.getState() } ?: emptyList(),
         )
         server.broadcast(gameState)
+    }
+
+    private fun nextLevel(engine: PulseEngine)
+    {
+        if (activeLevel !in levels) return
+
+        val nextLevel = levels.getOrNull(levels.indexOf(activeLevel) + 1)
+
+        if (nextLevel == null)
+        {
+            Logger.info("No more levels")
+            return
+        }
+
+        activeLevel = nextLevel
+        val level = engine.scene.getEntityOfType<Level>(activeLevel) ?: return
+
+        // Respawn all bots
+        engine.scene.forEachEntityOfType<Bot> { bot ->
+            bot.setSpawn(engine, level)
+            bot.isAlive = true
+        }
+        engine.scene.forEachEntityOfType<Pickup> { it.ownerId = -1L }
+    }
+
+    private fun Bot.setSpawn(engine: PulseEngine, level: Level)
+    {
+        val (xCell, yCell) = level.getSpawnPoint(engine)
+        val (x,y) = level.getWorldPos(xCell, yCell)
+        this.x = x
+        this.y = y
+        this.xCell = xCell
+        this.yCell = yCell
+        this.xCellLast = xCell
+        this.yCellLast = yCell
     }
 
     override fun onRender(engine: PulseEngine) { }

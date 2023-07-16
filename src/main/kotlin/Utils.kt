@@ -8,12 +8,27 @@ fun Surface2D.setDrawColor(color: Color, alpha: Float = 1f)
     setDrawColor(color.red, color.green, color.blue, color.alpha * alpha)
 }
 
+fun SceneManager.getActiveLevel(): Level?
+{
+    val levelId = getSystemOfType<Server>()?.activeLevel ?: return null
+    return getEntityOfType(levelId)
+}
+
 fun SceneManager.getItemPickedUpBy(botId: Long): Pickup?
 {
-    forEachEntityOfType<Pickup>()
+    val level = getActiveLevel() ?: return null
+    for (id in level.pickupIds)
     {
-        if (it.ownerId == botId)
-            return it
+        val pickup = getEntityOfType<Pickup>(id)
+        if (pickup?.ownerId == botId)
+            return pickup
     }
     return null
+}
+
+inline fun SceneManager.forEachActivePickup(action: (Pickup) -> Unit)
+{
+    val level = getActiveLevel() ?: return
+    for (id in level.pickupIds)
+        getEntityOfType<Pickup>(id)?.let(action)
 }

@@ -1,6 +1,7 @@
 package entities
 
 import data.BulletState
+import getActiveLevel
 import no.njoh.pulseengine.core.PulseEngine
 import no.njoh.pulseengine.core.graphics.Surface2D
 import no.njoh.pulseengine.core.scene.SceneEntity
@@ -30,7 +31,7 @@ class Bullet : SceneEntity(), Initiable, Updatable, Renderable, Spatial
     {
         val xNew = xCell + xVel
         val yNew = yCell + yVel
-        val level = engine.scene.getFirstEntityOfType<Level>() ?: return
+        val level = engine.scene.getActiveLevel() ?: return
         if (level.isWalkable(xNew, yNew))
         {
             xCellLast = xCell
@@ -53,7 +54,7 @@ class Bullet : SceneEntity(), Initiable, Updatable, Renderable, Spatial
 
     override fun onFixedUpdate(engine: PulseEngine)
     {
-        val level = engine.scene.getFirstEntityOfType<Level>() ?: return
+        val level = engine.scene.getActiveLevel() ?: return
         val (x, y) = level.getWorldPos(xCell, yCell)
         this.x = x
         this.y = y
