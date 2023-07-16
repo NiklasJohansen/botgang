@@ -10,7 +10,6 @@ import forEachActivePickup
 import getActiveLevel
 import no.njoh.pulseengine.core.PulseEngine
 import no.njoh.pulseengine.core.asset.types.Font
-import no.njoh.pulseengine.core.asset.types.Texture
 import no.njoh.pulseengine.core.graphics.Surface2D
 import no.njoh.pulseengine.core.scene.SceneEntity
 import no.njoh.pulseengine.core.scene.interfaces.Renderable
@@ -20,6 +19,7 @@ import no.njoh.pulseengine.core.shared.primitives.Color
 import no.njoh.pulseengine.core.shared.utils.Extensions.degreesBetween
 import no.njoh.pulseengine.core.shared.utils.Logger
 import getItemPickedUpBy
+import no.njoh.pulseengine.core.asset.types.Texture.Companion.BLANK
 import setDrawColor
 import kotlin.random.Random
 
@@ -181,31 +181,48 @@ class Bot : SceneEntity(), Updatable, Spatial, Renderable
     {
         val alpha = if (isAlive) 1f else 0.3f
 
-        // Body
-        surface.setDrawColor(color, alpha)
-        surface.drawTexture(Texture.BLANK, x, y, width, height, rotation, xOrigin = 0.5f, yOrigin = 0.5f, cornerRadius = 5f)
-
-        // Eyes
-        val wEye = height * 0.25f
-        val hEye = height * 0.25f
-        surface.setDrawColor(1f, 1f, 1f, 0.9f * alpha)
-        surface.drawTexture(Texture.BLANK, x, y, wEye, hEye, rotation, xOrigin = -0.7f, yOrigin = -0.4f, cornerRadius = 6f)
-        surface.drawTexture(Texture.BLANK, x, y, wEye, hEye, rotation, xOrigin = -0.7f, yOrigin = 1.4f, cornerRadius = 6f)
-        surface.setDrawColor(0f, 0f, 0f, alpha)
-        surface.drawTexture(Texture.BLANK, x, y, wEye * 0.7f, hEye * 0.6f, rotation, xOrigin = -1.3f, yOrigin = -1f, cornerRadius = 6f)
-        surface.drawTexture(Texture.BLANK, x, y, wEye * 0.7f, hEye * 0.6f, rotation, xOrigin = -1.3f, yOrigin = 2f, cornerRadius = 6f)
+        drawBody(surface, x, y, width, height, rotation, alpha)
 
         // Name plate
         val fontSize = height * 0.55f
         val namePlateHeight = y - height * 1.1f
         val namePlateWidth = Font.DEFAULT.getWidth(name, fontSize) + 12f
         surface.setDrawColor(Color(0f, 0f, 0f, 0.2f * alpha))
-        surface.drawTexture(Texture.BLANK, x, namePlateHeight, namePlateWidth, fontSize * 1.3f, xOrigin = 0.5f, yOrigin = 0.5f, cornerRadius = fontSize * 0.2f)
+        surface.drawTexture(BLANK, x, namePlateHeight, namePlateWidth, fontSize * 1.3f, xOrigin = 0.5f, yOrigin = 0.5f, cornerRadius = fontSize * 0.2f)
 
         // Name
         val font = engine.asset.getOrNull<Font>("font-bold")
         surface.setDrawColor(1f, 1f, 1f, alpha)
         surface.drawText(name, x, namePlateHeight, font = font, fontSize = fontSize, xOrigin = 0.5f, yOrigin = 0.5f)
+    }
+
+    fun drawBody(surface: Surface2D, x: Float, y: Float, width: Float, height: Float, rot: Float, alpha: Float)
+    {
+        // Body
+        surface.setDrawColor(color, alpha)
+        surface.drawTexture(BLANK, x, y, width, height, rot, xOrigin = 0.5f, yOrigin = 0.5f, cornerRadius = 5f)
+
+        // Eyes
+        val wEye = height * 0.25f
+        val hEye = height * 0.25f
+        surface.setDrawColor(1f, 1f, 1f, 0.9f * alpha)
+        surface.drawTexture(BLANK, x, y, wEye, hEye, rot, xOrigin = -0.7f, yOrigin = -0.4f, cornerRadius = 6f)
+        surface.drawTexture(BLANK, x, y, wEye, hEye, rot, xOrigin = -0.7f, yOrigin = 1.4f, cornerRadius = 6f)
+        surface.setDrawColor(0f, 0f, 0f, alpha)
+        surface.drawTexture(BLANK, x, y, wEye * 0.7f, hEye * 0.6f, rot, xOrigin = -1.3f, yOrigin = -1f, cornerRadius = 6f)
+        surface.drawTexture(BLANK, x, y, wEye * 0.7f, hEye * 0.6f, rot, xOrigin = -1.3f, yOrigin = 2f, cornerRadius = 6f)
+    }
+
+    fun setSpawn(engine: PulseEngine, level: Level)
+    {
+        val (xCell, yCell) = level.getSpawnPoint(engine)
+        val (x,y) = level.getWorldPos(xCell, yCell)
+        this.x = x
+        this.y = y
+        this.xCell = xCell
+        this.yCell = yCell
+        this.xCellLast = xCell
+        this.yCellLast = yCell
     }
 
     fun kill(engine: PulseEngine)

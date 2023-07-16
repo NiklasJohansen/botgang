@@ -25,17 +25,18 @@ class Level : SceneEntity(), Initiable, Spatial, Named, Renderable
     @ScnProp(min = 1f)      var yCells = 20
     @ScnProp(hidden = true) var cells = Array(xCells * yCells) { FLOOR }
 
-    var wallColor = Color(0.1f, 0.1f, 0.1f)
-    var floorColor = Color(0.4f, 0.4f, 0.4f)
-    var spawnColor = Color(0.4f, 0.4f, 0.4f)
-
-    override var name = "Unnamed Level"
     override var width = xCells * cellSize
     override var height = yCells * cellSize
     override var rotation = 0f
     override var x = 0f
     override var y = 0f
     override var z = 0f
+    override var name = "Unnamed Level"
+
+    var maxTicks   = 1000
+    var wallColor  = Color(0.1f, 0.1f, 0.1f)
+    var floorColor = Color(0.4f, 0.4f, 0.4f)
+    var spawnColor = Color(0.4f, 0.4f, 0.4f)
 
     @JsonIgnore
     var pickupIds = listOf<Long>()
