@@ -6,14 +6,19 @@
 <body>
     <h1>JavaScript Client</h1>
     <label id="label"></label>
-    <input id="input" value="Name"/>
+    <input id="input" placeholder="Name">
 </body>
 <script>
-    const connection = new WebSocket('ws://80.202.230.158:55501');
+    const connection = new WebSocket('ws://127.0.0.1:55501');
     let command = "IDLE"
     let myId = -1
 
-    document.onkeypress = function (e) {
+    document.getElementById("input").addEventListener("input", function(event) {
+        command = "NAME_" + event.target.value
+        event.preventDefault();
+    });
+
+    document.body.onkeypress = function (e) {
         if (e.keyCode === 119) command = "MOVE_UP"     // W
         if (e.keyCode === 115) command = "MOVE_DOWN"   // S
         if (e.keyCode === 97)  command = "MOVE_LEFT"   // A
@@ -24,11 +29,11 @@
         if (e.keyCode === 109) command = "MOVE_TO_1_1" // M
     };
 
-    document.onkeydown = function (e) {
-        if (e.keyCode === 38)  command = "ROTATE_UP"
-        if (e.keyCode === 40)  command = "ROTATE_DOWN"
-        if (e.keyCode === 37)  command = "ROTATE_LEFT"
-        if (e.keyCode === 39)  command = "ROTATE_RIGHT"
+    document.body.onkeydown = function (e) {
+        if (e.keyCode === 38) command = "ROTATE_UP"
+        if (e.keyCode === 40) command = "ROTATE_DOWN"
+        if (e.keyCode === 37) command = "ROTATE_LEFT"
+        if (e.keyCode === 39) command = "ROTATE_RIGHT"
     }
 
     connection.onmessage = function(event) {
@@ -41,17 +46,14 @@
         // Parse game state
         const gameState = JSON.parse(event.data);
         const myBot = gameState.bots.find(bot => bot.id === myId);
-        console.log(gameState);
 
         // Use data
         document.getElementById("label").innerHTML = gameState.tickNumber;
         console.log(myBot.x + " " + myBot.y);
 
         // Create and send response
-        connection.send(JSON.stringify({
-            clientName: document.getElementById("input").value,
-            command: command
-        }));
+        console.log("Sending command: " + command);
+        connection.send(JSON.stringify({ command: command }));
 
         // Reset command
         command = "IDLE"

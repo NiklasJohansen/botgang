@@ -3,6 +3,7 @@ import data.GameState
 import data.NewBotResponse
 import entities.*
 import no.njoh.pulseengine.core.PulseEngine
+import no.njoh.pulseengine.core.input.Key
 import no.njoh.pulseengine.core.scene.SceneEntity.Companion.DEAD
 import no.njoh.pulseengine.core.scene.SceneSystem
 import no.njoh.pulseengine.core.shared.utils.Logger
@@ -35,6 +36,9 @@ class Server : SceneSystem()
             tick(engine)
             lastTickTime = now
         }
+
+        if (engine.input.wasClicked(Key.N))
+            nextLevel(engine)
     }
 
     private fun onConnected(client: Client, engine: PulseEngine)
@@ -50,14 +54,13 @@ class Server : SceneSystem()
         val (x,y) = level.getWorldPos(xCell, yCell)
         val bot = Bot()
         bot.client = client
-        engine.scene.getFirstEntityOfType<Level>()?.let()
-        {
-            val (x,y) = it.getFreeSpot(engine)
-            bot.xCell = x
-            bot.yCell = y
-            bot.xCellLast = x
-            bot.yCellLast = y
-        }
+        bot.color = Bot.nextFreeColor(engine)
+        bot.x = x
+        bot.y = y
+        bot.xCell = xCell
+        bot.yCell = yCell
+        bot.xCellLast = xCell
+        bot.yCellLast = yCell
         engine.scene.addEntity(bot)
         client.send(NewBotResponse(bot.id))
         println("Connected: ${client.ipAddress}")

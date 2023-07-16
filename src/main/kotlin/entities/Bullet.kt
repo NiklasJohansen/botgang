@@ -48,6 +48,7 @@ class Bullet : SceneEntity(), Initiable, Updatable, Renderable, Spatial
             {
                 bot.kill(engine)
                 this.set(DEAD)
+                engine.scene.getEntityOfType<Bot>(ownerId)?.let { it.score += Scores.KILL }
             }
         }
     }
@@ -60,10 +61,7 @@ class Bullet : SceneEntity(), Initiable, Updatable, Renderable, Spatial
         this.y = y
     }
 
-    override fun onUpdate(engine: PulseEngine)
-    {
-
-    }
+    override fun onUpdate(engine: PulseEngine) { }
 
     override fun onRender(engine: PulseEngine, surface: Surface2D)
     {

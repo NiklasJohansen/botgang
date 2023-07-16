@@ -1,3 +1,4 @@
+import entities.Level
 import entities.Pickup
 import no.njoh.pulseengine.core.graphics.Surface2D
 import no.njoh.pulseengine.core.scene.SceneManager

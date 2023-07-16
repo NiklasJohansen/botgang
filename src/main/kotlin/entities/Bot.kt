@@ -1,10 +1,13 @@
 package entities
 
 import Pathfinder
-import Vector
 import core.server.Player
 import data.BotState
 import data.ClientResponse
+import data.Command
+import data.Command.*
+import forEachActivePickup
+import getActiveLevel
 import no.njoh.pulseengine.core.PulseEngine
 import no.njoh.pulseengine.core.asset.types.Font
 import no.njoh.pulseengine.core.asset.types.Texture
@@ -32,25 +35,22 @@ class Bot : SceneEntity(), Updatable, Spatial, Renderable
     override var z = 0f
 
     var name = "Unnamed"
-    var color = Color(
-        red = 0.5f + 0.5f * Random.nextFloat(),
-        green = 0.5f + 0.5f * Random.nextFloat(),
-        blue = 0.5f + 0.5f * Random.nextFloat()
-    )
-
+    var color = Color.WHITE
+    var score = 0
+    var isAlive = true
+    var angle = 0
     var xCell = 0; set (value) { xCellLast = field; field = value; }
     var yCell = 0; set (value) { yCellLast = field; field = value; }
     var xCellLast = 0
     var yCellLast = 0
-    var angle = 0
-    var isAlive = true
     var client: Client? = null
+
+    private val touchedPickups = mutableSetOf<Long>()
 
     fun onServerTick(engine: PulseEngine)
     {
         if (!isAlive) return
 
-        client?.response?.clientName?.let { name = it.take(10) }
         client?.response?.command?.let()
         {
             try { handleCommand(engine, it) }
@@ -63,23 +63,41 @@ class Bot : SceneEntity(), Updatable, Spatial, Renderable
 
     private fun handleCommand(engine: PulseEngine, command: String)
     {
-        when (command)
+        when (Command.parse(command))
         {
-            "MOVE_UP"      -> move(engine, 0, -1)
-            "MOVE_DOWN"    -> move(engine, 0, 1)
-            "MOVE_LEFT"    -> move(engine, -1, 0)
-            "MOVE_RIGHT"   -> move(engine, 1, 0)
-            "ROTATE_UP"    -> angle = 90
-            "ROTATE_DOWN"  -> angle = 270
-            "ROTATE_LEFT"  -> angle = 180
-            "ROTATE_RIGHT" -> angle = 0
-            "PICK_UP"      -> pickUpItem(engine)
-            "DROP"         -> dropItem(engine)
-            "USE"          -> useItem(engine)
-            else           -> {
-                if (command.startsWith("MOVE_TO"))
-                     command.split("_").let { (_,_,x,y) -> moveTo(engine, x.toInt(), y.toInt()) }
-            }
+            MOVE_TO      -> moveTo(engine, command)
+            MOVE_UP      -> move(engine, 0, -1)
+            MOVE_DOWN    -> move(engine, 0, 1)
+            MOVE_LEFT    -> move(engine, -1, 0)
+            MOVE_RIGHT   -> move(engine, 1, 0)
+            ROTATE_UP    -> rotate(90)
+            ROTATE_DOWN  -> rotate(270)
+            ROTATE_LEFT  -> rotate(180)
+            ROTATE_RIGHT -> rotate(0)
+            PICK_UP      -> pickUpItem(engine)
+            DROP         -> dropItem(engine)
+            USE          -> useItem(engine)
+            NAME         -> updateName(command)
+            IDLE         -> { }
+            else         -> Logger.error("Unknown command: $command")
+        }
+    }
+
+    private fun moveTo(engine: PulseEngine, rawCommand: String)
+    {
+        val (_,_,x,y) = rawCommand.split("_")
+        val xTarget = x.toInt()
+        val yTarget = y.toInt()
+
+        if (xTarget == xCell && yTarget == yCell)
+            return // Already there
+
+        val level = engine.scene.getActiveLevel() ?: return
+
+        Pathfinder().getPath(level, xCell, yCell, xTarget, yTarget)?.let { moves ->
+            val (xCell, yCell) = moves.pop()
+            this.xCell = xCell
+            this.yCell = yCell
         }
     }
 
@@ -90,6 +108,11 @@ class Bot : SceneEntity(), Updatable, Spatial, Renderable
             xCell += xDir
             yCell += yDir
         }
+    }
+
+    private fun rotate(angle: Int)
+    {
+        this.angle = angle
     }
 
     private fun pickUpItem(engine: PulseEngine)
@@ -103,10 +126,15 @@ class Bot : SceneEntity(), Updatable, Spatial, Renderable
             holdingItem.yCell = yCell
         }
 
-        engine.scene.forEachEntityOfType<Pickup>()
+        engine.scene.forEachActivePickup()
         {
-            if (it.ownerId == INVALID_ID && it != holdingItem && it.xCell == xCell && it.yCell == yCell)
+            if (it.ownerId == INVALID_ID && it !== holdingItem && it.xCell == xCell && it.yCell == yCell)
             {
+                if (it.id !in touchedPickups)
+                {
+                    score += Scores.PICKUP
+                    touchedPickups.add(it.id)
+                }
                 it.ownerId = this.id
                 return
             }
@@ -117,7 +145,7 @@ class Bot : SceneEntity(), Updatable, Spatial, Renderable
     {
         val pickup = engine.scene.getItemPickedUpBy(id) ?: return // Not holding an item
 
-        engine.scene.forEachEntityOfType<Pickup>()
+        engine.scene.forEachActivePickup()
         {
             if (it.id != pickup.id && it.xCell == xCell && it.yCell == yCell)
                 return // Cannot drop item on top of another item // TODO what about disconnect?
@@ -133,18 +161,9 @@ class Bot : SceneEntity(), Updatable, Spatial, Renderable
         engine.scene.getItemPickedUpBy(id)?.use(engine)
     }
 
-    private fun moveTo(engine: PulseEngine, xTarget: Int, yTarget: Int)
+    private fun updateName(command: String)
     {
-        if (xTarget == xCell && yTarget == yCell)
-            return // Already there
-
-        val level = engine.scene.getFirstEntityOfType<Level>() ?: return
-
-        Pathfinder().getPath(level, xCell, yCell, xTarget, yTarget)?.let { moves ->
-            val (x, y) = moves.pop()
-            this.xCell = x
-            this.yCell = y
-        }
+        name = command.substringAfter("_").take(10)
     }
 
     override fun onFixedUpdate(engine: PulseEngine)
@@ -192,8 +211,28 @@ class Bot : SceneEntity(), Updatable, Spatial, Renderable
     fun kill(engine: PulseEngine)
     {
         isAlive = false
+        client?.response?.command = IDLE.name
         dropItem(engine)
     }
 
     fun getState() = BotState(name, id, xCell, yCell, angle, isAlive)
+
+    companion object
+    {
+        fun nextFreeColor(engine: PulseEngine): Color
+        {
+            val takenColors = engine.scene.getAllEntitiesOfType<Bot>()?.map { it.color } ?: emptyList()
+            return COLORS.find { it !in takenColors } ?: COLORS[Random.nextInt(COLORS.size)]
+        }
+        private val COLORS = listOf(
+            Color(232, 97, 97),
+            Color(26, 102, 235),
+            Color(232, 97, 221),
+            Color(209, 143, 63),
+            Color(119, 209, 63),
+            Color(99, 67, 161),
+            Color(244, 250, 62),
+            Color(64, 224, 208)
+        )
+    }
 }
