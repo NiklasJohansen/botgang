@@ -259,7 +259,12 @@ class Server : SceneSystem()
         surface.drawTexture(Texture.BLANK, 0f, 0f, surface.width.toFloat(), surface.height.toFloat())
 
         val bots = engine.scene.getAllEntitiesOfType<Bot>()?.sortedByDescending { it.score } ?: emptyList()
-        val headingText = if (gameFinished) bots.firstOrNull()?.name + " wins!" else "Leaderboard"
+        val headingText = when
+        {
+            activeLevel == levels.firstOrNull() -> "Get Ready!"
+            gameFinished -> bots.firstOrNull()?.name + " wins!"
+            else -> "Leaderboard"
+        }
         val headingColor = if (gameFinished) bots.firstOrNull()?.color ?: WHITE else WHITE
 
         // Draw leaderboard text on center of screen
