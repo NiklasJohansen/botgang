@@ -68,6 +68,8 @@ class Bot : SceneEntity(), Updatable, Spatial, Renderable
     {
         when (Command.parse(command))
         {
+            NAME         -> updateName(command)
+            COLOR        -> updateColor(command)
             MOVE_TO      -> moveTo(engine, command)
             MOVE_UP      -> move(engine, 0, -1)
             MOVE_DOWN    -> move(engine, 0, 1)
@@ -80,7 +82,7 @@ class Bot : SceneEntity(), Updatable, Spatial, Renderable
             PICK_UP      -> pickUpItem(engine)
             DROP         -> dropItem(engine)
             USE          -> useItem(engine)
-            NAME         -> updateName(command)
+
             IDLE         -> { }
             else         -> Logger.error("Unknown command: $command")
         }
@@ -191,6 +193,12 @@ class Bot : SceneEntity(), Updatable, Spatial, Renderable
         name = command.substringAfter("_").take(10)
     }
 
+    private fun updateColor(command: String)
+    {
+        val c = java.awt.Color.decode(command.substringAfter("_"))
+        color.setFrom(c.red / 255f, c.green / 255f, c.blue / 255f, 1f)
+    }
+
     override fun onFixedUpdate(engine: PulseEngine)
     {
         val level = engine.scene.getActiveLevel() ?: return
@@ -266,6 +274,7 @@ class Bot : SceneEntity(), Updatable, Spatial, Renderable
             val takenColors = engine.scene.getAllEntitiesOfType<Bot>()?.map { it.color } ?: emptyList()
             return COLORS.find { it !in takenColors } ?: COLORS[Random.nextInt(COLORS.size)]
         }
+
         private val COLORS = listOf(
             Color(232, 97, 97),
             Color(26, 102, 235),

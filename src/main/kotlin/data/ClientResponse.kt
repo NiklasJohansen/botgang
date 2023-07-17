@@ -8,6 +8,7 @@ class ClientResponse
 enum class Command
 {
     NAME,
+    COLOR,
     MOVE_TO,
     MOVE_UP,
     MOVE_DOWN,

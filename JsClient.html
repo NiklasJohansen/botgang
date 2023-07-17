@@ -4,17 +4,30 @@
     <title>JavaScript Client</title>
 </head>
 <body>
-    <h1>JavaScript Client</h1>
+    <h1>Client</h1>
+    <label>Tick Number:</label>
     <label id="label"></label>
-    <input id="input" placeholder="Name">
+    <br>
+    <input id="name" placeholder="Name">
+    <br>
+    <input type="color" id="color">
+    <br>
+    <p>
+        W/A/S/D to move, arrow keys to rotate, E to pick up, Q to drop and SPACE to use item
+    </p>
 </body>
 <script>
     const connection = new WebSocket('ws://127.0.0.1:55501');
     let command = "IDLE"
     let myId = -1
 
-    document.getElementById("input").addEventListener("input", function(event) {
+    document.getElementById("name").addEventListener("input", function(event) {
         command = "NAME_" + event.target.value
+        event.preventDefault();
+    });
+
+    document.getElementById("color").addEventListener("input", function(event) {
+        command = "COLOR_" + event.target.value
         event.preventDefault();
     });
 
