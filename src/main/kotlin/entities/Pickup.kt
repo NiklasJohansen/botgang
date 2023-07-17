@@ -24,7 +24,13 @@ abstract class Pickup : SceneEntity(), Initiable, Updatable, Renderable, Spatial
 
     override fun onStart(engine: PulseEngine)
     {
-        setPosition(engine)
+        val level = engine.scene.getEntityOfType<Level>(parentId) ?: return
+        val (xCell, yCell) = level.getCellPos(x, y)
+        val (x, y) = level.getWorldPos(xCell, yCell)
+        this.xCell = xCell
+        this.yCell = yCell
+        this.x = x
+        this.y = y
     }
 
     override fun onFixedUpdate(engine: PulseEngine) { }
@@ -42,19 +48,6 @@ abstract class Pickup : SceneEntity(), Initiable, Updatable, Renderable, Spatial
             angle = owner.angle
         }
         else ownerId = INVALID_ID
-    }
-
-    private fun setPosition(engine: PulseEngine)
-    {
-        val level = engine.scene.getEntityOfType<Level>(parentId) ?: return
-        val xClosestCell = (x - (level.x - level.width * 0.5f)).coerceIn(0f, level.width) / level.cellSize
-        val yClosestCell = (y - (level.y - level.height * 0.5f)).coerceIn(0f, level.height) / level.cellSize
-        xCell = xClosestCell.toInt()
-        yCell = yClosestCell.toInt()
-
-        val (xTarget, yTarget) = level.getWorldPos(xCell, yCell)
-        x = xTarget
-        y = yTarget
     }
 
     abstract fun use(engine: PulseEngine)

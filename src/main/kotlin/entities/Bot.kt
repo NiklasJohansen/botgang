@@ -82,7 +82,6 @@ class Bot : SceneEntity(), Updatable, Spatial, Renderable
             PICK_UP      -> pickUpItem(engine)
             DROP         -> dropItem(engine)
             USE          -> useItem(engine)
-
             IDLE         -> { }
             else         -> Logger.error("Unknown command: $command")
         }
@@ -141,15 +140,7 @@ class Bot : SceneEntity(), Updatable, Spatial, Renderable
 
     private fun pickUpItem(engine: PulseEngine)
     {
-        // Drop item if already holding one
         val holdingItem = engine.scene.getItemPickedUpBy(id)
-        if (holdingItem != null)
-        {
-            holdingItem.ownerId = INVALID_ID
-            holdingItem.xCell = xCell
-            holdingItem.yCell = yCell
-        }
-
         engine.scene.forEachActivePickup()
         {
             if (it.ownerId == INVALID_ID && it !== holdingItem && it.xCell == xCell && it.yCell == yCell)
@@ -159,7 +150,17 @@ class Bot : SceneEntity(), Updatable, Spatial, Renderable
                     score += Scores.PICKUP
                     touchedPickups.add(it.id)
                 }
+
+                // Assign item to bot
                 it.ownerId = this.id
+
+                // Drop item if already holding one
+                if (holdingItem != null)
+                {
+                    holdingItem.ownerId = INVALID_ID
+                    holdingItem.xCell = xCell
+                    holdingItem.yCell = yCell
+                }
                 return
             }
         }

@@ -114,6 +114,8 @@ class Server : SceneSystem()
             ?.shuffled()
             ?.forEach { it.onServerTick(engine) }
 
+        engine.scene.forEachEntityOfType<Ammo> { it.onServerTick(engine) }
+
         engine.scene.forEachEntityOfType<Bullet> { it.onServerTick(engine) }
 
         // Send current game state to all clients
@@ -124,16 +126,17 @@ class Server : SceneSystem()
     private fun distributeGameState(engine: PulseEngine)
     {
         val level = engine.scene.getActiveLevel() ?: return
-
         val gameState = GameState(
             tickNumber = tickCount,
             level = level.getState(),
             bots = engine.scene.getAllEntitiesOfType<Bot>()
                 ?.map { it.getState() } ?: emptyList(),
-            pickups = engine.scene.getAllEntitiesOfType<Gun>()
+            guns = engine.scene.getAllEntitiesOfType<Gun>()
                 ?.mapNotNull { if (it.parentId == level.id) it.getState() else null } ?: emptyList(),
             bullets = engine.scene.getAllEntitiesOfType<Bullet>()
                 ?.map { it.getState() } ?: emptyList(),
+            ammo = engine.scene.getAllEntitiesOfType<Ammo>()
+                ?.map { it.getState() } ?: emptyList()
         )
         server.broadcast(gameState)
     }

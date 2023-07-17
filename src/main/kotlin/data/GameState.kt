@@ -4,8 +4,9 @@ data class GameState(
     var tickNumber: Long,
     var level: LevelState,
     var bots: List<BotState>,
-    var pickups: List<GunState>,
-    var bullets: List<BulletState>
+    var guns: List<GunState>,
+    var bullets: List<BulletState>,
+    var ammo: List<AmmoState>
 )
 
 data class LevelState(
@@ -40,4 +41,11 @@ data class BulletState(
     val xVelocity: Int,
     val yVelocity: Int,
     val ownerId: Long
+)
+
+data class AmmoState(
+    val id: Long,
+    val x: Int,
+    val y: Int,
+    val amount: Int,
 )

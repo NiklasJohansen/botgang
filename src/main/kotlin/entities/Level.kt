@@ -168,6 +168,11 @@ class Level : SceneEntity(), Initiable, Spatial, Named, Renderable
         y - height * 0.5f + yCell * cellSize + cellSize * 0.5f
     )
 
+    fun getCellPos(xWorld: Float, yWorld: Float) = Pair(
+        ((xWorld - x + width * 0.5f) / cellSize).toInt().coerceIn(0, xCells),
+        ((yWorld - y + height * 0.5f) / cellSize).toInt().coerceIn(0, yCells)
+    )
+
     enum class CellType(val num: Int)
     {
         FLOOR(0),
