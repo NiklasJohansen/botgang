@@ -96,17 +96,36 @@ class Bot : SceneEntity(), Updatable, Spatial, Renderable
 
         Pathfinder().getPath(level, xCell, yCell, xTarget, yTarget)?.let { moves ->
             val (xCell, yCell) = moves.pop()
-            this.xCell = xCell
-            this.yCell = yCell
+            if (level.isWalkable(xCell, yCell) && !level.isOccupied(xCell, yCell))
+            {
+                val targetAngle = when
+                {
+                    xCell > this.xCell -> 0
+                    xCell < this.xCell -> 180
+                    yCell > this.yCell -> 270
+                    yCell < this.yCell -> 90
+                    else -> angle
+                }
+
+                if (angle == targetAngle)
+                {
+                    this.xCell = xCell
+                    this.yCell = yCell
+                    level.setOccupied(xCell, yCell)
+                }
+                else rotate(targetAngle)
+            }
         }
     }
 
     private fun move(engine: PulseEngine, xDir: Int, yDir: Int)
     {
-        if (engine.scene.getActiveLevel()?.isWalkable(xCell + xDir, yCell + yDir) == true)
+        val level = engine.scene.getActiveLevel() ?: return
+        if (level.isWalkable(xCell + xDir, yCell + yDir) && !level.isOccupied(xCell + xDir, yCell + yDir))
         {
             xCell += xDir
             yCell += yDir
+            level.setOccupied(xCell, yCell)
         }
     }
 

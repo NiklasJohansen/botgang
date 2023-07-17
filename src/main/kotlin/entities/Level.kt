@@ -38,13 +38,24 @@ class Level : SceneEntity(), Initiable, Spatial, Named, Renderable
     var floorColor = Color(0.4f, 0.4f, 0.4f)
     var spawnColor = Color(0.4f, 0.4f, 0.4f)
 
-    @JsonIgnore
-    var pickupIds = listOf<Long>()
+    @JsonIgnore var pickupIds = listOf<Long>()
+    @JsonIgnore var occupiedCells = BooleanArray(xCells * yCells)
+
     private var editType = FLOOR
 
     override fun onStart(engine: PulseEngine)
     {
         pickupIds = this.childIds?.filter { engine.scene.getEntity(it) is Pickup } ?: emptyList()
+    }
+
+    fun onServerTick(engine: PulseEngine)
+    {
+        if (occupiedCells.size != cells.size)
+            occupiedCells = BooleanArray(cells.size)
+
+        occupiedCells.fill(false)
+
+        engine.scene.forEachEntityOfType<Bot> { if (it.isAlive) setOccupied(it.xCell, it.yCell) }
     }
 
     override fun onRender(engine: PulseEngine, surface: Surface2D)
@@ -110,7 +121,16 @@ class Level : SceneEntity(), Initiable, Spatial, Named, Renderable
     }
 
     fun isWalkable(x: Int, y: Int): Boolean =
-        x >= 0 && x < xCells && y >= 0 && y < yCells && cells[y * xCells + x].num < 2
+        x >= 0 && y >= 0 && x < xCells && y < yCells && cells[y * xCells + x].num < 2
+
+    fun isOccupied(x: Int, y: Int) =
+        x >= 0 && y >= 0 && x < xCells && y < yCells && occupiedCells[y * xCells + x]
+
+    fun setOccupied(x: Int, y: Int)
+    {
+        if (x >= 0 && y >= 0 && x < xCells && y < yCells)
+            occupiedCells[y * xCells + x] = true
+    }
 
     fun getSpawnPoint(engine: PulseEngine): Pair<Int, Int>
     {
