@@ -5,14 +5,19 @@ import entities.*
 import no.njoh.pulseengine.core.PulseEngine
 import no.njoh.pulseengine.core.asset.types.Font
 import no.njoh.pulseengine.core.asset.types.Texture
+import no.njoh.pulseengine.core.graphics.api.Multisampling.MSAA16
 import no.njoh.pulseengine.core.input.Key
 import no.njoh.pulseengine.core.scene.SceneEntity.Companion.DEAD
 import no.njoh.pulseengine.core.scene.SceneState.RUNNING
 import no.njoh.pulseengine.core.scene.SceneSystem
 import no.njoh.pulseengine.core.shared.primitives.Color
 import no.njoh.pulseengine.core.shared.primitives.SwapList
+import no.njoh.pulseengine.core.shared.utils.Extensions.toRadians
 import no.njoh.pulseengine.core.shared.utils.Logger
+import kotlin.math.PI
+import kotlin.math.cos
 import kotlin.math.min
+import kotlin.math.sin
 
 class Server : SceneSystem()
 {
@@ -29,11 +34,12 @@ class Server : SceneSystem()
     private var startTickNumber = 0L
     private var levelFinished = false
     private var gameFinished = false
+    private var paused = false
     private var leaderBoardWaitTime = 5000f
 
     override fun onCreate(engine: PulseEngine)
     {
-        engine.gfx.createSurface(name = "leaderboard", zOrder = -10)
+        engine.gfx.createSurface(name = "leaderboard", zOrder = -10, multisampling = MSAA16)
     }
 
     override fun onStart(engine: PulseEngine)
@@ -47,13 +53,12 @@ class Server : SceneSystem()
     {
         if (!levelFinished && isLevelFinished(engine) && engine.scene.state == RUNNING)
         {
-            levelFinished = true
-            nextLevelTimer = System.currentTimeMillis()
+            finishLevel()
         }
 
         val now = System.currentTimeMillis()
         val elapsedTime = now - lastTickTime
-        if (!levelFinished && elapsedTime > 1000 / tickRate)
+        if (!levelFinished && !paused && elapsedTime > 1000 / tickRate)
         {
             tick(engine)
             lastTickTime = now
@@ -67,8 +72,10 @@ class Server : SceneSystem()
             }
         }
 
-        if (engine.input.wasClicked(Key.N))
-            nextLevel(engine)
+        if (engine.input.wasClicked(Key.SPACE)) finishLevel()
+        if (engine.input.wasClicked(Key.P)) paused = !paused
+        if (engine.input.wasClicked(Key.UP)) tickRate++
+        if (engine.input.wasClicked(Key.DOWN)) tickRate = maxOf(1, tickRate - 1)
     }
 
     private fun onConnected(client: Client, engine: PulseEngine)
@@ -80,17 +87,10 @@ class Server : SceneSystem()
         }
 
         val level = engine.scene.getActiveLevel() ?: return
-        val (xCell,yCell) = level.getSpawnPoint(engine)
-        val (x,y) = level.getWorldPos(xCell, yCell)
         val bot = Bot()
         bot.client = client
         bot.color = Bot.nextFreeColor(engine)
-        bot.x = x
-        bot.y = y
-        bot.xCell = xCell
-        bot.yCell = yCell
-        bot.xCellLast = xCell
-        bot.yCellLast = yCell
+        bot.setSpawn(engine, level)
         engine.scene.addEntity(bot)
         client.send(NewBotResponse(bot.id))
         println("Connected: ${client.ipAddress}")
@@ -108,8 +108,12 @@ class Server : SceneSystem()
 
     private fun tick(engine: PulseEngine)
     {
-        // Update entities
-        engine.scene.forEachEntityOfType<Bot> { it.onServerTick(engine) } // TODO: Randomize update order
+        engine.scene.getActiveLevel()?.onServerTick(engine)
+
+        engine.scene.getAllEntitiesOfType<Bot>()
+            ?.shuffled()
+            ?.forEach { it.onServerTick(engine) }
+
         engine.scene.forEachEntityOfType<Bullet> { it.onServerTick(engine) }
 
         // Send current game state to all clients
@@ -134,9 +138,20 @@ class Server : SceneSystem()
         server.broadcast(gameState)
     }
 
+    private fun finishLevel()
+    {
+        levelFinished = true
+        nextLevelTimer = System.currentTimeMillis()
+        if (levels.indexOf(activeLevel) == levels.lastIndex)
+        {
+            gameFinished = true
+            Logger.info("Game finished!")
+        }
+    }
+
     private fun nextLevel(engine: PulseEngine)
     {
-        if (activeLevel !in levels) return
+        if (activeLevel !in levels || gameFinished) return
 
         val nextLevel = levels.getOrNull(levels.indexOf(activeLevel) + 1)
         if (nextLevel == null)
@@ -172,7 +187,7 @@ class Server : SceneSystem()
         // Is there only one bot left alive
         val bots = engine.scene.getAllEntitiesOfType<Bot>() ?: SwapList()
         val aliveBots = bots.count { it.isAlive }
-        if (bots.size > 1 && aliveBots == 1)
+        if (bots.size > 1 && aliveBots < 2)
             return true
 
         return false
@@ -180,9 +195,45 @@ class Server : SceneSystem()
 
     override fun onRender(engine: PulseEngine)
     {
-        if (!levelFinished)
-            return
+        if (levelFinished)
+            drawLeaderboard(engine)
+        else
+            drawClock(engine)
+    }
 
+    private fun drawClock(engine: PulseEngine)
+    {
+        val xCenter = 30f
+        val yCenter = 30f
+        val radius = 20f
+        val surface = engine.gfx.getSurfaceOrDefault("leaderboard")
+        surface.setDrawColor(WHITE, 0.5f)
+
+        // Draw circle
+        var xLast = xCenter + radius * cos(0f)
+        var yLast = yCenter + radius * sin(0f)
+        val segments = 30
+        val angleIncrement = (360f / segments).toRadians()
+        for (i in 1 until segments + 1)
+        {
+            val x = xCenter + radius * cos(angleIncrement * i)
+            val y = yCenter + radius * sin(angleIncrement * i)
+            surface.drawLine(xLast, yLast, x, y)
+            xLast = x
+            yLast = y
+        }
+
+        // Draw clock arm
+        val levelMaxTicks = engine.scene.getEntityOfType<Level>(activeLevel)?.maxTicks ?: 1f
+        val t = (tickCount - startTickNumber) / levelMaxTicks.toFloat()
+        val x = xCenter + radius * cos(t * 2f * PI.toFloat() - PI.toFloat() * 0.5f)
+        val y = yCenter + radius * sin(t * 2f * PI.toFloat() - PI.toFloat() * 0.5f)
+        surface.setDrawColor(WHITE, 0.8f)
+        surface.drawLine(xCenter, yCenter, x, y)
+    }
+
+    private fun drawLeaderboard(engine: PulseEngine)
+    {
         val now = System.currentTimeMillis()
         val time = now - nextLevelTimer
         val initWaitTime = leaderBoardWaitTime * 0.2f
@@ -204,10 +255,14 @@ class Server : SceneSystem()
         surface.setDrawColor(0f, 0f, 0f, alpha * 0.98f)
         surface.drawTexture(Texture.BLANK, 0f, 0f, surface.width.toFloat(), surface.height.toFloat())
 
+        val bots = engine.scene.getAllEntitiesOfType<Bot>()?.sortedByDescending { it.score } ?: emptyList()
+        val headingText = if (gameFinished) bots.firstOrNull()?.name + " wins!" else "Leaderboard"
+        val headingColor = if (gameFinished) bots.firstOrNull()?.color ?: WHITE else WHITE
+
         // Draw leaderboard text on center of screen
-        surface.setDrawColor(WHITE, alpha)
+        surface.setDrawColor(headingColor, alpha)
         surface.drawText(
-            text = "Leaderboard",
+            text = headingText,
             x = surface.width * 0.5f,
             y = surface.height * 0.175f,
             font = font,
@@ -216,7 +271,7 @@ class Server : SceneSystem()
             yOrigin = 0.5f
         )
 
-        val bots = engine.scene.getAllEntitiesOfType<Bot>()?.sortedByDescending { it.score } ?: emptyList()
+
         val botSize = min(surface.height * 0.4f / bots.size, 80f)
         val ySpacing = botSize * 1.5f
         val xSpacing = botSize * 1.2f

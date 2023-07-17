@@ -54,7 +54,10 @@ class Bot : SceneEntity(), Updatable, Spatial, Renderable
         client?.response?.command?.let()
         {
             try { handleCommand(engine, it) }
-            catch (e: Exception) { Logger.error("$name client sent a bad command: $it") }
+            catch (e: Exception) {
+                Logger.error("$name client sent a bad command: $it")
+                e.printStackTrace()
+            }
         }
 
         // Clear command
@@ -163,16 +166,19 @@ class Bot : SceneEntity(), Updatable, Spatial, Renderable
     private fun dropItem(engine: PulseEngine)
     {
         val pickup = engine.scene.getItemPickedUpBy(id) ?: return // Not holding an item
-
-        engine.scene.forEachActivePickup()
-        {
-            if (it.id != pickup.id && it.xCell == xCell && it.yCell == yCell)
-                return // Cannot drop item on top of another item // TODO what about disconnect?
-        }
-
         pickup.ownerId = INVALID_ID
         pickup.xCell = xCell
         pickup.yCell = yCell
+
+        // If there is already an item at this position, remove it
+        engine.scene.forEachActivePickup()
+        {
+            if (it.id != pickup.id && it.xCell == xCell && it.yCell == yCell)
+            {
+                it.ownerId = INVALID_ID
+                it.set(DEAD)
+            }
+        }
     }
 
     private fun useItem(engine: PulseEngine)
