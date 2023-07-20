@@ -16,7 +16,7 @@ class Main : PulseEngineGame()
         engine.asset.loadFont("fonts/badabb.ttf", "font-bold")
 
         val dev = true
-        if (dev) engine.data.saveDirectory = "D:\\projects\\aigame\\src\\main\\resources"
+        if (dev) engine.data.saveDirectory = "D:\\projects\\botgang\\src\\main\\resources"
 
         engine.scene.loadAndSetActive("scenes/levels.scn", fromClassPath = !dev)
         engine.scene.start()
