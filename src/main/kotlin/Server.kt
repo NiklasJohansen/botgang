@@ -28,16 +28,16 @@ class Server : SceneSystem()
     var maxBotCount = 8
     var activeLevel = -1L
     var levels = longArrayOf()
+    var leaderBoardWaitTime = 5000f
 
     private var server = GameServer(Client::class.java)
-    private var lastTickTime = 0L
     private var tickCount = 0L
-    private var nextLevelTimer = 0L
     private var startTickNumber = 0L
+    private var lastTickTime = 0L
+    private var nextLevelTimer = 0L
     private var levelFinished = false
     private var gameFinished = false
     private var paused = false
-    private var leaderBoardWaitTime = 5000f
 
     override fun onCreate(engine: PulseEngine)
     {
@@ -66,12 +66,9 @@ class Server : SceneSystem()
             lastTickTime = now
         }
 
-        if (levelFinished && !gameFinished)
+        if (levelFinished && !gameFinished && now - nextLevelTimer > leaderBoardWaitTime)
         {
-            if (now - nextLevelTimer > leaderBoardWaitTime)
-            {
-                nextLevel(engine)
-            }
+            nextLevel(engine)
         }
 
         if (engine.input.wasClicked(Key.SPACE)) finishLevel(engine)
@@ -104,8 +101,8 @@ class Server : SceneSystem()
         {
             it.kill(engine)
             it.set(DEAD)
+            println("Disconnected: ${client.ipAddress}")
         }
-        println("Disconnected: ${client.ipAddress}")
     }
 
     private fun tick(engine: PulseEngine)

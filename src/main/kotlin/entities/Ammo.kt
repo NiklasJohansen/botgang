@@ -1,6 +1,7 @@
 package entities
 
 import data.AmmoState
+import data.Scores
 import getItemPickedUpBy
 import no.njoh.pulseengine.core.PulseEngine
 import no.njoh.pulseengine.core.asset.types.Texture
@@ -57,12 +58,17 @@ class Ammo : SceneEntity(), Initiable, Updatable, Renderable, Spatial
                 continue
 
             val gun = engine.scene.getItemPickedUpBy(bot.id) as? Gun ?: continue
+            var wasRestocked = false
             while (gun.bulletCount < 3 && amount > 0)
             {
                 amount--
                 gun.bulletCount++
                 coolDownTimer = coolDownTicks
+                wasRestocked = true
             }
+
+            if (wasRestocked)
+                bot.score += Scores.RESTOCK
         }
     }
 
