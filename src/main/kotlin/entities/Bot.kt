@@ -1,15 +1,17 @@
 package entities
 
-import Pathfinder
-import core.server.Player
+import util.Pathfinder
 import data.BotState
-import data.ClientResponse
+import data.Client
 import data.Command
 import data.Command.*
+import data.Scores
 import forEachActivePickup
 import getActiveLevel
+import getItemPickedUpBy
 import no.njoh.pulseengine.core.PulseEngine
 import no.njoh.pulseengine.core.asset.types.Font
+import no.njoh.pulseengine.core.asset.types.Texture.Companion.BLANK
 import no.njoh.pulseengine.core.graphics.Surface2D
 import no.njoh.pulseengine.core.scene.SceneEntity
 import no.njoh.pulseengine.core.scene.interfaces.Renderable
@@ -18,12 +20,8 @@ import no.njoh.pulseengine.core.scene.interfaces.Updatable
 import no.njoh.pulseengine.core.shared.primitives.Color
 import no.njoh.pulseengine.core.shared.utils.Extensions.degreesBetween
 import no.njoh.pulseengine.core.shared.utils.Logger
-import getItemPickedUpBy
-import no.njoh.pulseengine.core.asset.types.Texture.Companion.BLANK
 import setDrawColor
 import kotlin.random.Random
-
-class Client : Player<ClientResponse>(ClientResponse::class.java)
 
 class Bot : SceneEntity(), Updatable, Spatial, Renderable
 {
@@ -37,6 +35,7 @@ class Bot : SceneEntity(), Updatable, Spatial, Renderable
     var name = "Unnamed"
     var color = Color.WHITE
     var score = 0
+    var kills = 0
     var isAlive = true
     var angle = 0
     var xCell = 0; set (value) { xCellLast = field; field = value; }
@@ -87,6 +86,17 @@ class Bot : SceneEntity(), Updatable, Spatial, Renderable
         }
     }
 
+    private fun updateName(command: String)
+    {
+        name = command.substringAfter("_").take(10)
+    }
+
+    private fun updateColor(command: String)
+    {
+        val c = java.awt.Color.decode(command.substringAfter("_"))
+        color.setFrom(c.red / 255f, c.green / 255f, c.blue / 255f, 1f)
+    }
+
     private fun moveTo(engine: PulseEngine, rawCommand: String)
     {
         val (_,_,x,y) = rawCommand.split("_")
@@ -97,28 +107,27 @@ class Bot : SceneEntity(), Updatable, Spatial, Renderable
             return // Already there
 
         val level = engine.scene.getActiveLevel() ?: return
+        val moves = Pathfinder().getPath(level, xCell, yCell, xTarget, yTarget) ?: return
+        val (xCell, yCell) = moves.pop()
 
-        Pathfinder().getPath(level, xCell, yCell, xTarget, yTarget)?.let { moves ->
-            val (xCell, yCell) = moves.pop()
-            if (level.isWalkable(xCell, yCell) && !level.isOccupied(xCell, yCell))
+        if (level.isWalkable(xCell, yCell) && !level.isOccupied(xCell, yCell))
+        {
+            val targetAngle = when
             {
-                val targetAngle = when
-                {
-                    xCell > this.xCell -> 0
-                    xCell < this.xCell -> 180
-                    yCell > this.yCell -> 270
-                    yCell < this.yCell -> 90
-                    else -> angle
-                }
-
-                if (angle == targetAngle)
-                {
-                    this.xCell = xCell
-                    this.yCell = yCell
-                    level.setOccupied(xCell, yCell)
-                }
-                else rotate(targetAngle)
+                xCell > this.xCell -> 0
+                xCell < this.xCell -> 180
+                yCell > this.yCell -> 270
+                yCell < this.yCell -> 90
+                else -> angle
             }
+
+            if (angle == targetAngle)
+            {
+                this.xCell = xCell
+                this.yCell = yCell
+                level.setOccupied(xCell, yCell)
+            }
+            else rotate(targetAngle)
         }
     }
 
@@ -187,17 +196,6 @@ class Bot : SceneEntity(), Updatable, Spatial, Renderable
     private fun useItem(engine: PulseEngine)
     {
         engine.scene.getItemPickedUpBy(id)?.use(engine)
-    }
-
-    private fun updateName(command: String)
-    {
-        name = command.substringAfter("_").take(10)
-    }
-
-    private fun updateColor(command: String)
-    {
-        val c = java.awt.Color.decode(command.substringAfter("_"))
-        color.setFrom(c.red / 255f, c.green / 255f, c.blue / 255f, 1f)
     }
 
     override fun onFixedUpdate(engine: PulseEngine)

@@ -1,6 +1,8 @@
 import core.server.GameServer
+import data.Client
 import data.GameState
 import data.NewBotResponse
+import data.Scores
 import entities.*
 import no.njoh.pulseengine.core.PulseEngine
 import no.njoh.pulseengine.core.asset.types.Font
@@ -53,7 +55,7 @@ class Server : SceneSystem()
     {
         if (!levelFinished && isLevelFinished(engine) && engine.scene.state == RUNNING)
         {
-            finishLevel()
+            finishLevel(engine)
         }
 
         val now = System.currentTimeMillis()
@@ -72,7 +74,7 @@ class Server : SceneSystem()
             }
         }
 
-        if (engine.input.wasClicked(Key.SPACE)) finishLevel()
+        if (engine.input.wasClicked(Key.SPACE)) finishLevel(engine)
         if (engine.input.wasClicked(Key.P)) paused = !paused
         if (engine.input.wasClicked(Key.UP)) tickRate++
         if (engine.input.wasClicked(Key.DOWN)) tickRate = maxOf(1, tickRate - 1)
@@ -141,7 +143,7 @@ class Server : SceneSystem()
         server.broadcast(gameState)
     }
 
-    private fun finishLevel()
+    private fun finishLevel(engine: PulseEngine)
     {
         levelFinished = true
         nextLevelTimer = System.currentTimeMillis()
@@ -150,6 +152,11 @@ class Server : SceneSystem()
             gameFinished = true
             Logger.info("Game finished!")
         }
+
+        // Reward points among living players
+        engine.scene.getAllEntitiesOfType<Bot>()
+            ?.filter { it.isAlive }
+            ?.let { bots -> bots.forEach { it.score += Scores.WIN / bots.size } }
     }
 
     private fun nextLevel(engine: PulseEngine)
@@ -279,7 +286,6 @@ class Server : SceneSystem()
             yOrigin = 0.5f
         )
 
-
         val botSize = min(surface.height * 0.4f / bots.size, 80f)
         val ySpacing = botSize * 1.5f
         val xSpacing = botSize * 1.2f
@@ -321,7 +327,7 @@ class Server : SceneSystem()
 
             // Score
             surface.drawText(
-                text = bot.score.toString(),
+                text = "${bot.score} (${bot.kills})",
                 x = xCenter + surface.width * 0.2f + botSize * 0.5f,
                 y = yCenter + i * ySpacing,
                 font = font,

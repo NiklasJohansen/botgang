@@ -99,5 +99,5 @@ class Gun : Pickup()
         }
     }
 
-    override fun getState() = GunState(type = "GUN", id, xCell, yCell, ownerId, bulletCount)
+    override fun getState() = GunState(id, xCell, yCell, ownerId, bulletCount)
 }

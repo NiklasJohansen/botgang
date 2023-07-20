@@ -1,8 +1,10 @@
 package entities
 
 import data.BulletState
+import data.Scores
 import getActiveLevel
 import no.njoh.pulseengine.core.PulseEngine
+import no.njoh.pulseengine.core.asset.types.Texture.Companion.BLANK
 import no.njoh.pulseengine.core.graphics.Surface2D
 import no.njoh.pulseengine.core.scene.SceneEntity
 import no.njoh.pulseengine.core.scene.interfaces.Initiable
@@ -48,7 +50,10 @@ class Bullet : SceneEntity(), Initiable, Updatable, Renderable, Spatial
             {
                 bot.kill(engine)
                 this.set(DEAD)
-                engine.scene.getEntityOfType<Bot>(ownerId)?.let { it.score += Scores.KILL }
+                engine.scene.getEntityOfType<Bot>(ownerId)?.let {
+                    it.score += Scores.KILL
+                    it.kills++
+                }
             }
         }
     }
@@ -65,15 +70,18 @@ class Bullet : SceneEntity(), Initiable, Updatable, Renderable, Spatial
 
     override fun onRender(engine: PulseEngine, surface: Surface2D)
     {
-        val length = width * 0.5f
-        val x0 = x - length * xVel
-        val y0 = y - length * yVel
-        val x1 = x + length * xVel
-        val y1 = y + length * yVel
-
-        // Draw bullet as line
         surface.setDrawColor(1f, 1f, 0f)
-        surface.drawLine(x0, y0, x1, y1)
+        surface.drawTexture(
+            texture = BLANK,
+            x = x,
+            y = y,
+            width = width * 0.6f,
+            height = 5f,
+            rot = if (yVel == 0) 0f else 90f,
+            xOrigin = 0.5f,
+            yOrigin = 0.5f,
+            cornerRadius = 2f
+        )
     }
 
     fun getState() = BulletState(id, xCell, yCell, xVel, yVel, ownerId)

@@ -26,7 +26,6 @@ data class BotState(
 )
 
 open class GunState(
-    val type: String,
     val id: Long,
     val x: Int,
     val y: Int,

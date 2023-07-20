@@ -1,5 +1,7 @@
 package data
 
+import core.server.Player
+
 class ClientResponse
 {
     var command = "IDLE"
@@ -28,3 +30,5 @@ enum class Command
         fun parse(command: String) = values().find { command.startsWith(it.name) }
     }
 }
+
+class Client : Player<ClientResponse>(ClientResponse::class.java)
