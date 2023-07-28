@@ -24,7 +24,7 @@ different time limits.
 
 These are the available commands accepted by the game.
 
-| Command        | <div style="width:220px">Example payload </div> | Action                                                                                          |
+| Command        | Example payload | Action                                                                                          |
 |----------------|-------------------------------------------------|-------------------------------------------------------------------------------------------------|
 | `NAME`         | `{"command": "NAME_NameOfBot"}`                 | Sets the bot name (max 10 chars).                                                               |
 | `COLOR`        | `{"command": "COLOR_#0317fc"}`                  | Set the bot color.                                                                              |
@@ -42,6 +42,134 @@ These are the available commands accepted by the game.
 | `USE`          | `{"command": "USE"}`                            | Uses the picked up item if present.                                                             |
 | `IDLE`         | `{"command": "IDLE"}`                           | No action.                                                                                      |
 
+## Connecting to the game
+
+The game will be hosted on a server with a public IP address. The port number will be announced at the event.
+On connection your client will receive a message with the ID of your bot: 
+```json
+{ "id": 123 }
+```
+This ID is used to identify your bot in the public game state distributed to all bots each tick.
+
+Example code for connecting to the game using JavaScript:
+```javascript
+// Open a connection to the game server
+const connection = new WebSocket('ws://127.0.0.1:55501');
+let myId = -1;
+
+// Listen for messages
+connection.onmessage = function(event) {
+    
+    // Store the ID of your bot on initial connection
+    if (myId === -1) {
+        myId = JSON.parse(event.data).id
+        return;
+    }
+
+    // Do something with the gamestate and calculate a response command
+    const gamestate = JSON.parse(event.data);
+    const enemy = gamestate.bots.find(b => b.id !== myId && b.alive);
+    let command = "IDLE";
+    if (enemy) {
+        command = "MOVE_TO_" + enemy.x + "_" + enemy.y;
+    }
+
+    // Send the response 
+    connection.send(JSON.stringify({ command: command }));
+}
+```
+See [JsClient.html](https://github.com/NiklasJohansen/botgang/blob/master/JsClient.html) for an interactive web client
+example.
+
+
 ## Gamestate
 
-TODO
+Each tick the game will send a message to all connected bots with the current state:
+
+```json
+{
+  "tickNumber": 111,
+  "level": {
+    "name": "Level #1",
+    "width": 21,
+    "height": 21,
+    "cells": [
+      [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+      [2, 1, 0, 0, 2, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 2, 0, 0, 1, 2],
+      [2, 0, 2, 0, 2, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 2, 0, 2, 0, 2],
+      [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
+      [2, 2, 2, 0, 0, 0, 2, 0, 0, 2, 2, 2, 0, 0, 2, 0, 0, 0, 2, 2, 2],
+      [2, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 2],
+      [2, 0, 0, 0, 2, 2, 2, 0, 0, 2, 2, 2, 0, 0, 2, 2, 2, 0, 0, 0, 2],
+      [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
+      [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
+      [2, 0, 0, 0, 2, 0, 2, 0, 0, 1, 2, 1, 0, 0, 2, 0, 2, 0, 0, 0, 2],
+      [2, 2, 2, 2, 2, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 2, 2, 2, 2, 2],
+      [2, 0, 0, 0, 2, 0, 2, 0, 0, 1, 2, 1, 0, 0, 2, 0, 2, 0, 0, 0, 2],
+      [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
+      [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
+      [2, 0, 0, 0, 2, 2, 2, 0, 0, 2, 2, 2, 0, 0, 2, 2, 2, 0, 0, 0, 2],
+      [2, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 2],
+      [2, 2, 2, 0, 0, 0, 2, 0, 0, 2, 2, 2, 0, 0, 2, 0, 0, 0, 2, 2, 2],
+      [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
+      [2, 0, 2, 0, 2, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 2, 0, 2],
+      [2, 1, 0, 0, 2, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 2, 0, 0, 1, 2],
+      [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
+    ]
+  },
+  "bots": [
+    {
+      "name": "Arne",
+      "id": 56,
+      "x": 1,
+      "y": 1,
+      "angle": 0,
+      "isAlive": true
+    },
+    {
+      "name": "Nils-Ove",
+      "id": 57,
+      "x": 17,
+      "y": 18,
+      "angle": 180,
+      "isAlive": true
+    }
+  ],
+  "guns": [
+    {
+      "id": 30,
+      "x": 17,
+      "y": 18,
+      "ownerId": 56,
+      "bulletCount": 3
+    },
+    {
+      "id": 42,
+      "x": 1,
+      "y": 19,
+      "ownerId": -1,
+      "bulletCount": 2
+    }
+  ],
+  "bullets": [
+    {
+      "id": 40,
+      "x": 10,
+      "y": 15,
+      "xVelocity" : -1,
+      "yVelocity" : 0,
+      "angle": 0,
+      "ownerId": 56
+    }
+  ],
+  "ammo": [
+    {
+      "id": 50,
+      "x": 15,
+      "y": 15,
+      "amount": 3
+    }
+  ]
+}
+```
+The level consists of cells. A cell can be one of the following: **0** (empty), **1** (spawn point), **2** (wall).
