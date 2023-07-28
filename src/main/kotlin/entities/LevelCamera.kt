@@ -1,9 +1,9 @@
 package entities
 
-import getActiveLevel
 import no.njoh.pulseengine.core.PulseEngine
 import no.njoh.pulseengine.core.scene.SceneState
 import no.njoh.pulseengine.modules.scene.entities.Camera
+import util.getActiveLevel
 
 class LevelCamera : Camera()
 {

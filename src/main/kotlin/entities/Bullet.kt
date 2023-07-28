@@ -2,7 +2,6 @@ package entities
 
 import data.BulletState
 import data.Scores
-import getActiveLevel
 import no.njoh.pulseengine.core.PulseEngine
 import no.njoh.pulseengine.core.asset.types.Texture.Companion.BLANK
 import no.njoh.pulseengine.core.graphics.Surface2D
@@ -11,6 +10,7 @@ import no.njoh.pulseengine.core.scene.interfaces.Initiable
 import no.njoh.pulseengine.core.scene.interfaces.Renderable
 import no.njoh.pulseengine.core.scene.interfaces.Spatial
 import no.njoh.pulseengine.core.scene.interfaces.Updatable
+import util.getActiveLevel
 
 class Bullet : SceneEntity(), Initiable, Updatable, Renderable, Spatial
 {

@@ -9,12 +9,14 @@ class Pathfinder
     private var width = 0
     private var height = 0
 
-    fun getPath(level: Level, xStart: Int, yStart: Int, xTarget: Int, yTarget: Int): Stack<Vector>? {
+    fun getPath(level: Level, xStart: Int, yStart: Int, xTarget: Int, yTarget: Int): Stack<Vector>?
+    {
         if (xStart == xTarget && yStart == yTarget)
             return null
 
         width = level.xCells
         height = level.yCells
+
         val map = IntArray(width * height * 6).also { it[X_PARENT, xStart, yStart] = INVALID }
         var xNode = xStart
         var yNode = yStart

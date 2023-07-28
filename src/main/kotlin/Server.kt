@@ -16,6 +16,8 @@ import no.njoh.pulseengine.core.shared.primitives.Color
 import no.njoh.pulseengine.core.shared.primitives.SwapList
 import no.njoh.pulseengine.core.shared.utils.Extensions.toRadians
 import no.njoh.pulseengine.core.shared.utils.Logger
+import util.getActiveLevel
+import util.setDrawColor
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.min

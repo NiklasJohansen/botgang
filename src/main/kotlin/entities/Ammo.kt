@@ -2,7 +2,6 @@ package entities
 
 import data.AmmoState
 import data.Scores
-import getItemPickedUpBy
 import no.njoh.pulseengine.core.PulseEngine
 import no.njoh.pulseengine.core.asset.types.Texture
 import no.njoh.pulseengine.core.graphics.Surface2D
@@ -12,6 +11,7 @@ import no.njoh.pulseengine.core.scene.interfaces.Renderable
 import no.njoh.pulseengine.core.scene.interfaces.Spatial
 import no.njoh.pulseengine.core.scene.interfaces.Updatable
 import no.njoh.pulseengine.core.shared.primitives.SwapList
+import util.getItemPickedUpBy
 import kotlin.math.max
 
 class Ammo : SceneEntity(), Initiable, Updatable, Renderable, Spatial

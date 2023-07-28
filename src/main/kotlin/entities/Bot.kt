@@ -1,14 +1,10 @@
 package entities
 
-import util.Pathfinder
 import data.BotState
 import data.Client
 import data.Command
 import data.Command.*
 import data.Scores
-import forEachActivePickup
-import getActiveLevel
-import getItemPickedUpBy
 import no.njoh.pulseengine.core.PulseEngine
 import no.njoh.pulseengine.core.asset.types.Font
 import no.njoh.pulseengine.core.asset.types.Texture.Companion.BLANK
@@ -20,7 +16,7 @@ import no.njoh.pulseengine.core.scene.interfaces.Updatable
 import no.njoh.pulseengine.core.shared.primitives.Color
 import no.njoh.pulseengine.core.shared.utils.Extensions.degreesBetween
 import no.njoh.pulseengine.core.shared.utils.Logger
-import setDrawColor
+import util.*
 import kotlin.random.Random
 
 class Bot : SceneEntity(), Updatable, Spatial, Renderable
