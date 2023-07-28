@@ -1,5 +1,7 @@
 # BOTGANG 
 
+![game level](game.png)
+
 **Botgang** is the next game in the [shotgang](https://github.com/NiklasJohansen/shotgang) series of 2D top-down competitive 
 shooters. This one is made for Låve-LAN 2023 and changes up the formula a bit. Each player is now controlled by a bot,
 more specifically an external AI communicating with the game through a TCP socket connection. The bots are sent 
