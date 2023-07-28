@@ -22,6 +22,7 @@ import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.min
 import kotlin.math.sin
+import kotlin.random.Random
 
 class Server : SceneSystem()
 {
@@ -33,6 +34,7 @@ class Server : SceneSystem()
     var leaderBoardWaitTime = 5000f
 
     private var server = GameServer(Client::class.java)
+    private var random = Random(1)
     private var tickCount = 0L
     private var startTickNumber = 0L
     private var lastTickTime = 0L
@@ -55,7 +57,10 @@ class Server : SceneSystem()
 
     override fun onUpdate(engine: PulseEngine)
     {
-        if (!levelFinished && isLevelFinished(engine) && engine.scene.state == RUNNING)
+        if (engine.scene.state != RUNNING)
+            return
+
+        if (!levelFinished && isLevelFinished(engine))
         {
             finishLevel(engine)
         }
@@ -112,7 +117,7 @@ class Server : SceneSystem()
         engine.scene.getActiveLevel()?.onServerTick(engine)
 
         engine.scene.getAllEntitiesOfType<Bot>()
-            ?.shuffled()
+            ?.shuffled(random)
             ?.forEach { it.onServerTick(engine) }
 
         engine.scene.forEachEntityOfType<Ammo> { it.onServerTick(engine) }
@@ -175,10 +180,12 @@ class Server : SceneSystem()
 
         // Respawn all bots
         val level = engine.scene.getEntityOfType<Level>(activeLevel) ?: return
-        engine.scene.forEachEntityOfType<Bot> { bot ->
-            bot.setSpawn(engine, level)
-            bot.isAlive = true
-        }
+        engine.scene.getAllEntitiesOfType<Bot>()
+            ?.shuffled(random)
+            ?.forEach {
+                it.setSpawn(engine, level)
+                it.isAlive = true
+            }
 
         // Reset all pickups
         engine.scene.forEachEntityOfType<Pickup> { it.ownerId = -1L }

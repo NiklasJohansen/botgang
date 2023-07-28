@@ -13,6 +13,7 @@ import no.njoh.pulseengine.core.scene.interfaces.Updatable
 import no.njoh.pulseengine.core.shared.primitives.SwapList
 import util.getItemPickedUpBy
 import kotlin.math.max
+import kotlin.math.min
 
 class Ammo : SceneEntity(), Initiable, Updatable, Renderable, Spatial
 {
@@ -78,10 +79,15 @@ class Ammo : SceneEntity(), Initiable, Updatable, Renderable, Spatial
 
     override fun onRender(engine: PulseEngine, surface: Surface2D)
     {
+        val size = min(width, height) * 0.9f
+        surface.setDrawColor(0f, 0f, 0f, 0.05f)
+        surface.drawTexture(Texture.BLANK, x, y, size, size, xOrigin = 0.5f, yOrigin = 0.5f, cornerRadius = size * 0.5f)
+
         val bulletWidth = width * 0.13f
         for (i in 0 until amount)
         {
             val x = x - (amount - 1) * bulletWidth * 0.5f + i * bulletWidth
+            val y = y - height * 0.03f
 
             // Tip
             surface.setDrawColor(0.7f, 0.7f, 0.7f)

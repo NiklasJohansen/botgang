@@ -21,35 +21,36 @@
     let command = "IDLE"
     let myId = -1
 
-    document.getElementById("name").addEventListener("input", function(event) {
+    document.getElementById("name").addEventListener("input", function (event) {
         command = "NAME_" + event.target.value
         event.preventDefault();
     });
 
-    document.getElementById("color").addEventListener("input", function(event) {
+    document.getElementById("color").addEventListener("input", function (event) {
         command = "COLOR_" + event.target.value
         event.preventDefault();
     });
 
-    document.body.onkeypress = function (e) {
-        if (e.keyCode === 119) command = "MOVE_UP"     // W
-        if (e.keyCode === 115) command = "MOVE_DOWN"   // S
-        if (e.keyCode === 97)  command = "MOVE_LEFT"   // A
-        if (e.keyCode === 100) command = "MOVE_RIGHT"  // D
-        if (e.keyCode === 101) command = "PICK_UP"     // E
-        if (e.keyCode === 113) command = "DROP"        // Q
-        if (e.keyCode === 32)  command = "USE"         // SPACE
-        if (e.keyCode === 109) command = "MOVE_TO_1_1" // M
+    document.body.onkeypress = function (event) {
+        if (event.keyCode === 119) command = "MOVE_UP"     // W
+        if (event.keyCode === 115) command = "MOVE_DOWN"   // S
+        if (event.keyCode === 97)  command = "MOVE_LEFT"   // A
+        if (event.keyCode === 100) command = "MOVE_RIGHT"  // D
+        if (event.keyCode === 101) command = "PICK_UP"     // E
+        if (event.keyCode === 113) command = "DROP"        // Q
+        if (event.keyCode === 32)  command = "USE"         // SPACE
+        if (event.keyCode === 109) command = "MOVE_TO_1_1" // M
     };
 
-    document.body.onkeydown = function (e) {
-        if (e.keyCode === 38) command = "ROTATE_UP"
-        if (e.keyCode === 40) command = "ROTATE_DOWN"
-        if (e.keyCode === 37) command = "ROTATE_LEFT"
-        if (e.keyCode === 39) command = "ROTATE_RIGHT"
+    document.body.onkeydown = function (event) {
+        if (event.keyCode === 38) command = "ROTATE_UP"
+        if (event.keyCode === 40) command = "ROTATE_DOWN"
+        if (event.keyCode === 37) command = "ROTATE_LEFT"
+        if (event.keyCode === 39) command = "ROTATE_RIGHT"
     }
 
-    connection.onmessage = function(event) {
+    connection.onmessage = function (event) {
+
         // Store your bot ID
         if (myId === -1) {
             myId = JSON.parse(event.data).id

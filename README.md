@@ -26,23 +26,23 @@ different time limits.
 
 These are the available commands accepted by the game.
 
-| Command        | Example payload | Action                                                                                          |
-|----------------|-------------------------------------------------|-------------------------------------------------------------------------------------------------|
-| `NAME`         | `{"command": "NAME_NameOfBot"}`                 | Sets the bot name (max 10 chars).                                                               |
-| `COLOR`        | `{"command": "COLOR_#0317fc"}`                  | Set the bot color.                                                                              |
-| `MOVE_TO`      | `{"command": "MOVE_TO_15_7"}`                   | Moves the bot one cell along the path to the given position, or no action if no path was found. |
-| `MOVE_UP`      | `{"command": "MOVE_UP"}`                        | Moves the bot one cell upwards (-Y dir) if possible.                                            |
-| `MOVE_DOWN`    | `{"command": "MOVE_DOWN"}`                      | Moves the bot one cell downwards (+Y dir) if possible.                                          |
-| `MOVE_LEFT`    | `{"command": "MOVE_LEFT"}`                      | Moves the bot one cell left (-X dir) if possible.                                               |
-| `MOVE_RIGHT`   | `{"command": "MOVE_RIGHT"}`                     | Moves the bot one cell right (+X dir) if possible.                                              |
-| `ROTATE_UP`    | `{"command": "ROTATE_UP"}`                      | Rotates the bot towards 90 degrees.                                                             |
-| `ROTATE_DOWN`  | `{"command": "ROTATE_DOWN"}`                    | Rotates the bot towards 270 degrees.                                                            |
-| `ROTATE_LEFT`  | `{"command": "ROTATE_LEFT"}`                    | Rotates the bot towards 180 degrees.                                                            |
-| `ROTATE_RIGHT` | `{"command": "ROTATE_RIGHT"}`                   | Rotates the bot towards 0 degrees.                                                              |
-| `PICK_UP`      | `{"command": "PICK_UP"}`                        | Picks up the item at the bot position. Will swap an already picked up item.                     |
-| `DROP`         | `{"command": "DROP"}`                           | Drops the picked up item if present.                                                            |
-| `USE`          | `{"command": "USE"}`                            | Uses the picked up item if present.                                                             |
-| `IDLE`         | `{"command": "IDLE"}`                           | No action.                                                                                      |
+| Command        | Example payload                 | Action                                                                                          |
+|----------------|---------------------------------|-------------------------------------------------------------------------------------------------|
+| `NAME`         | `{"command": "NAME_NameOfBot"}` | Sets the bot name (max 10 chars).                                                               |
+| `COLOR`        | `{"command": "COLOR_#0317fc"}`  | Set the bot color.                                                                              |
+| `MOVE_TO`      | `{"command": "MOVE_TO_15_7"}`   | Moves the bot one cell along the path to the given position, or no action if no path was found. |
+| `MOVE_UP`      | `{"command": "MOVE_UP"}`        | Moves the bot one cell upwards (-Y dir) if possible.                                            |
+| `MOVE_DOWN`    | `{"command": "MOVE_DOWN"}`      | Moves the bot one cell downwards (+Y dir) if possible.                                          |
+| `MOVE_LEFT`    | `{"command": "MOVE_LEFT"}`      | Moves the bot one cell left (-X dir) if possible.                                               |
+| `MOVE_RIGHT`   | `{"command": "MOVE_RIGHT"}`     | Moves the bot one cell right (+X dir) if possible.                                              |
+| `ROTATE_UP`    | `{"command": "ROTATE_UP"}`      | Rotates the bot towards 90 degrees.                                                             |
+| `ROTATE_DOWN`  | `{"command": "ROTATE_DOWN"}`    | Rotates the bot towards 270 degrees.                                                            |
+| `ROTATE_LEFT`  | `{"command": "ROTATE_LEFT"}`    | Rotates the bot towards 180 degrees.                                                            |
+| `ROTATE_RIGHT` | `{"command": "ROTATE_RIGHT"}`   | Rotates the bot towards 0 degrees.                                                              |
+| `PICK_UP`      | `{"command": "PICK_UP"}`        | Picks up the item at the bot position. Will swap an already picked up item.                     |
+| `DROP`         | `{"command": "DROP"}`           | Drops the picked up item if present.                                                            |
+| `USE`          | `{"command": "USE"}`            | Uses the picked up item if present.                                                             |
+| `IDLE`         | `{"command": "IDLE"}`           | No action.                                                                                      |
 
 ## Connecting to the game
 
@@ -70,7 +70,7 @@ connection.onmessage = function(event) {
 
     // Do something with the gamestate and calculate a response command
     const gamestate = JSON.parse(event.data);
-    const enemy = gamestate.bots.find(b => b.id !== myId && b.alive);
+    const enemy = gamestate.bots.find(b => b.id !== myId && b.isAlive);
     let command = "IDLE";
     if (enemy) {
         command = "MOVE_TO_" + enemy.x + "_" + enemy.y;
