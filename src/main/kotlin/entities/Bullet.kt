@@ -10,6 +10,7 @@ import no.njoh.pulseengine.core.scene.interfaces.Initiable
 import no.njoh.pulseengine.core.scene.interfaces.Renderable
 import no.njoh.pulseengine.core.scene.interfaces.Spatial
 import no.njoh.pulseengine.core.scene.interfaces.Updatable
+import no.njoh.pulseengine.core.shared.primitives.SwapList
 import util.getActiveLevel
 
 class Bullet : SceneEntity(), Initiable, Updatable, Renderable, Spatial
@@ -43,14 +44,19 @@ class Bullet : SceneEntity(), Initiable, Updatable, Renderable, Spatial
         }
         else this.set(DEAD)
 
-        engine.scene.forEachEntityOfType<Bot> { bot ->
+        for (bot in engine.scene.getAllEntitiesOfType<Bot>() ?: SwapList())
+        {
+            if (bot.id == ownerId || !bot.isAlive) continue
+
             val isOnSameSpot = bot.xCell == xCell && bot.yCell == yCell
-            val passedThrough = bot.xCell == xCellLast && bot.yCell == yCellLast && bot.xCellLast == xCell && bot.yCellLast == yCell
-            if (bot.id != ownerId && (isOnSameSpot || passedThrough))
+            val passedThroughBot = bot.xCell == xCellLast && bot.yCell == yCellLast && bot.xCellLast == xCell && bot.yCellLast == yCell
+
+            if (isOnSameSpot || passedThroughBot)
             {
                 bot.kill(engine)
                 this.set(DEAD)
-                engine.scene.getEntityOfType<Bot>(ownerId)?.let {
+                engine.scene.getEntityOfType<Bot>(ownerId)?.let()
+                {
                     it.score += Scores.KILL
                     it.kills++
                 }
