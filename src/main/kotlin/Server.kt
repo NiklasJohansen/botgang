@@ -189,6 +189,9 @@ class Server : SceneSystem()
                 it.isAlive = true
             }
 
+        // Remove bullets
+        engine.scene.forEachEntityOfType<Bullet> { it.set(DEAD) }
+
         // Reset all pickups
         engine.scene.forEachEntityOfType<Pickup> { it.ownerId = -1L }
         println("Next level: ${level.name} (${level.id}}")
