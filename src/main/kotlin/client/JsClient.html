@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Example Client</title>
+</head>
+<body>
+    <h1>Example Client</h1>
+</body>
+<script>
+    // Open a connection to the game server
+    const connection = new WebSocket('ws://127.0.0.1:55501');
+    let myId = -1;
+
+    // Listen for messages
+    connection.onmessage = function(event) {
+
+        // Store the ID of your bot on initial connection
+        if (myId === -1) {
+            myId = JSON.parse(event.data).id
+            return;
+        }
+
+        // Do something with the gamestate and calculate a response command
+        const gamestate = JSON.parse(event.data);
+        const enemy = gamestate.bots.find(b => b.id !== myId && b.isAlive);
+        let command = "IDLE";
+        if (enemy) {
+            command = "MOVE_TO_" + enemy.x + "_" + enemy.y;
+        }
+
+        // Send the response
+        connection.send(JSON.stringify({ command: command }));
+    }
+</script>
+</html>

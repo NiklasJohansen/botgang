@@ -80,9 +80,10 @@ connection.onmessage = function(event) {
     connection.send(JSON.stringify({ command: command }));
 }
 ```
-See [JsClient.html](https://github.com/NiklasJohansen/botgang/blob/master/JsClient.html) for an interactive web client
-example.
-
+Available example clients:
+* Kotlin: [KotlinClient.kt](https://github.com/NiklasJohansen/botgang/blob/master/src/main/kotlin/client/KotlinClient.kt)
+* JavaScript: [JsClient.html](https://github.com/NiklasJohansen/botgang/blob/master/src/main/kotlin/client/JsClient.html)
+* Interactive web client: [JsClientInteractive.html](https://github.com/NiklasJohansen/botgang/blob/master/src/main/kotlin/client/JsClientInteractive.html)
 
 ## Gamestate
 
