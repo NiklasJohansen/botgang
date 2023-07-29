@@ -23,7 +23,7 @@ class Level : SceneEntity(), Initiable, Spatial, Named, Renderable
     @ScnProp(min = 1f)      var cellSize = 20f
     @ScnProp(min = 1f)      var xCells = 20
     @ScnProp(min = 1f)      var yCells = 20
-    @ScnProp(hidden = true) var cells = Array(xCells * yCells) { FLOOR }
+    @ScnProp(hidden = true) var cells = IntArray(xCells * yCells) { 0 }
 
     override var width = xCells * cellSize
     override var height = yCells * cellSize
@@ -72,7 +72,7 @@ class Level : SceneEntity(), Initiable, Spatial, Named, Renderable
             {
                 for (xi in 0 until xCells)
                 {
-                    if (cells[yi * xCells + xi] != cellType)
+                    if (cells[yi * xCells + xi] != cellType.num)
                         continue
 
                     val color = when (cellType)
@@ -108,20 +108,20 @@ class Level : SceneEntity(), Initiable, Spatial, Named, Renderable
                 if (engine.input.isPressed(K_2)) editType = SPAWN
                 if (engine.input.isPressed(K_3)) editType = WALL
                 if (engine.input.isPressed(Mouse.RIGHT))
-                    cells[y * xCells + x] = editType
+                    cells[y * xCells + x] = editType.num
             }
         }
     }
 
     private fun resizeLevel()
     {
-        cells = Array(xCells * yCells) { FLOOR }
+        cells = IntArray(xCells * yCells) { 0 }
         width = xCells * cellSize
         height = yCells * cellSize
     }
 
     fun isWalkable(x: Int, y: Int): Boolean =
-        x >= 0 && y >= 0 && x < xCells && y < yCells && cells[y * xCells + x].num < 2
+        x >= 0 && y >= 0 && x < xCells && y < yCells && cells[y * xCells + x] < 2
 
     fun isOccupied(x: Int, y: Int) =
         x >= 0 && y >= 0 && x < xCells && y < yCells && occupiedCells[y * xCells + x]
@@ -147,7 +147,7 @@ class Level : SceneEntity(), Initiable, Spatial, Named, Renderable
             {
                 val cell = cells[yi * xCells + xi]
                 val dist = (xCenter - xi) * (xCenter - xi) + (yCenter - yi) * (yCenter - yi)
-                if (cell == SPAWN && dist > distMax && bots?.any { it.xCell == xi && it.yCell == yi } != true)
+                if (cell == SPAWN.num && dist > distMax && bots?.any { it.xCell == xi && it.yCell == yi } != true)
                 {
                     distMax = dist
                     xMax = xi
@@ -158,7 +158,7 @@ class Level : SceneEntity(), Initiable, Spatial, Named, Renderable
 
         // No spawn points found, return first spawn point
         if (distMax == Int.MIN_VALUE)
-            cells.forEachIndexed { i, cell -> if (cell == SPAWN) return Pair(i % xCells, i / xCells) }
+            cells.forEachIndexed { i, cell -> if (cell == SPAWN.num) return Pair(i % xCells, i / xCells) }
 
         return Pair(xMax, yMax)
     }
@@ -184,6 +184,6 @@ class Level : SceneEntity(), Initiable, Spatial, Named, Renderable
         name = name,
         width = xCells,
         height = yCells,
-        cells = Array(yCells) { y -> IntArray(xCells) { x -> cells[y * xCells + x].num } }
+        cells = Array(yCells) { y -> IntArray(xCells) { x -> cells[y * xCells + x] } }
     )
 }

@@ -32,9 +32,10 @@ class Server : SceneSystem()
     var activeLevel = -1L
     var levels = longArrayOf()
     var leaderBoardWaitTime = 5000f
+    var seed = 123
 
     private var server = GameServer(Client::class.java)
-    private var random = Random(1)
+    private var random = Random(seed)
     private var tickCount = 0L
     private var startTickNumber = 0L
     private var lastTickTime = 0L
@@ -53,6 +54,7 @@ class Server : SceneSystem()
         server.setOnNewPlayerConnection { client -> onConnected(client, engine) }
         server.setOnPlayerDisconnect { client -> onDisconnected(client, engine) }
         server.start(port)
+        random = Random(seed)
     }
 
     override fun onUpdate(engine: PulseEngine)
@@ -275,7 +277,7 @@ class Server : SceneSystem()
         val headingText = when
         {
             activeLevel == levels.firstOrNull() -> "Get Ready!"
-            gameFinished -> bots.firstOrNull()?.name + " wins!"
+            gameFinished -> (bots.firstOrNull()?.name ?: "No one") + " wins!"
             else -> "Leaderboard"
         }
         val headingColor = if (gameFinished) bots.firstOrNull()?.color ?: WHITE else WHITE
