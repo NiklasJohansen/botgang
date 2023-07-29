@@ -144,7 +144,7 @@ class Server : SceneSystem()
             bullets = engine.scene.getAllEntitiesOfType<Bullet>()
                 ?.map { it.getState() } ?: emptyList(),
             ammo = engine.scene.getAllEntitiesOfType<Ammo>()
-                ?.map { it.getState() } ?: emptyList()
+                ?.mapNotNull { if (it.parentId == level.id) it.getState() else null } ?: emptyList(),
         )
         server.broadcast(gameState)
     }
