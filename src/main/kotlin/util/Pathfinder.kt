@@ -27,11 +27,9 @@ class Pathfinder
             {
                 val xTest = xNode + dir.x
                 val yTest = yNode + dir.y
-                if (!level.isWalkable(xTest, yTest) ||
-                    (level.isOccupied(xTest, yTest) && xTest != xTarget && yTest != yTarget)
-                ) {
+                val blocked = !level.isWalkable(xTest, yTest) || level.isOccupied(xTest, yTest)
+                if (blocked && !(xTest == xTarget && yTest == yTarget))
                     continue
-                }
 
                 val targetFound = processNode(map, xNode, yNode, xTarget, yTarget, xTest, yTest)
                 if (targetFound)
