@@ -11,6 +11,7 @@ import no.njoh.pulseengine.core.scene.interfaces.Renderable
 import no.njoh.pulseengine.core.scene.interfaces.Spatial
 import no.njoh.pulseengine.core.scene.interfaces.Updatable
 import no.njoh.pulseengine.core.shared.primitives.SwapList
+import util.getActiveLevel
 import util.getItemPickedUpBy
 import kotlin.math.max
 import kotlin.math.min
@@ -45,6 +46,9 @@ class Ammo : SceneEntity(), Initiable, Updatable, Renderable, Spatial
 
     fun onServerTick(engine: PulseEngine)
     {
+        if (parentId != engine.scene.getActiveLevel()?.id)
+            return // Only update ammo in active level
+
         coolDownTimer = max(0, coolDownTimer - 1)
         if (coolDownTimer == 0 && amount < maxAmount)
         {
