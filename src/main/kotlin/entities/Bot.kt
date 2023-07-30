@@ -251,6 +251,14 @@ class Bot : SceneEntity(), Updatable, Spatial, Renderable
         this.yCell = yCell
         this.xCellLast = xCell
         this.yCellLast = yCell
+        this.angle = when
+        {
+            xCell < level.width / 2 -> 0
+            xCell > level.width / 2 -> 180
+            yCell < level.height / 2 -> 270
+            yCell > level.height / 2 -> 90
+            else -> 0
+        }
     }
 
     fun kill(engine: PulseEngine)
