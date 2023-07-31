@@ -116,14 +116,12 @@ class Server : SceneSystem()
 
     private fun tick(engine: PulseEngine)
     {
+        // Tick all entities in order of level, bots, ammo and bullets
         engine.scene.getActiveLevel()?.onServerTick(engine)
-
         engine.scene.getAllEntitiesOfType<Bot>()
             ?.shuffled(random)
             ?.forEach { it.onServerTick(engine) }
-
         engine.scene.forEachEntityOfType<Ammo> { it.onServerTick(engine) }
-
         engine.scene.forEachEntityOfType<Bullet> { it.onServerTick(engine) }
 
         // Send current game state to all clients
@@ -134,17 +132,14 @@ class Server : SceneSystem()
     private fun distributeGameState(engine: PulseEngine)
     {
         val level = engine.scene.getActiveLevel() ?: return
+        val levelChildren = level.childIds?.toList() ?: emptyList()
         val gameState = GameState(
             tickNumber = tickCount,
             level = level.getState(),
-            bots = engine.scene.getAllEntitiesOfType<Bot>()
-                ?.map { it.getState() } ?: emptyList(),
-            guns = engine.scene.getAllEntitiesOfType<Gun>()
-                ?.mapNotNull { if (it.parentId == level.id) it.getState() else null } ?: emptyList(),
-            bullets = engine.scene.getAllEntitiesOfType<Bullet>()
-                ?.map { it.getState() } ?: emptyList(),
-            ammo = engine.scene.getAllEntitiesOfType<Ammo>()
-                ?.mapNotNull { if (it.parentId == level.id) it.getState() else null } ?: emptyList(),
+            bots = engine.scene.getAllEntitiesOfType<Bot>()?.map { it.getState() } ?: emptyList(),
+            bullets = engine.scene.getAllEntitiesOfType<Bullet>()?.map { it.getState() } ?: emptyList(),
+            guns = levelChildren.mapNotNull { engine.scene.getEntityOfType<Gun>(it)?.getState() },
+            ammo = levelChildren.mapNotNull { engine.scene.getEntityOfType<Ammo>(it)?.getState() }
         )
         server.broadcast(gameState)
     }
