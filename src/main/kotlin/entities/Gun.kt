@@ -24,6 +24,8 @@ class Gun : Pickup()
             }
 
             val bullet = Bullet()
+            bullet.x = x
+            bullet.y = y
             bullet.xCell = xCell
             bullet.yCell = yCell
             bullet.xCellLast = xCell

@@ -161,7 +161,6 @@ Each tick the game will send a message to all connected bots with the current st
       "y": 15,
       "xVelocity" : -1,
       "yVelocity" : 0,
-      "angle": 0,
       "ownerId": 56
     }
   ],

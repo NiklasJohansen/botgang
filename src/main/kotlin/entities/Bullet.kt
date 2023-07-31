@@ -67,9 +67,9 @@ class Bullet : SceneEntity(), Initiable, Updatable, Renderable, Spatial
     override fun onFixedUpdate(engine: PulseEngine)
     {
         val level = engine.scene.getActiveLevel() ?: return
-        val (x, y) = level.getWorldPos(xCell, yCell)
-        this.x = x
-        this.y = y
+        val (xTarget, yTarget) = level.getWorldPos(xCell, yCell)
+        x += (xTarget - x) * 0.3f
+        y += (yTarget - y) * 0.3f
     }
 
     override fun onUpdate(engine: PulseEngine) { }

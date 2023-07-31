@@ -7,6 +7,7 @@ import no.njoh.pulseengine.core.scene.interfaces.Initiable
 import no.njoh.pulseengine.core.scene.interfaces.Renderable
 import no.njoh.pulseengine.core.scene.interfaces.Spatial
 import no.njoh.pulseengine.core.scene.interfaces.Updatable
+import no.njoh.pulseengine.core.shared.utils.Extensions.degreesBetween
 
 abstract class Pickup : SceneEntity(), Initiable, Updatable, Renderable, Spatial
 {
@@ -33,16 +34,20 @@ abstract class Pickup : SceneEntity(), Initiable, Updatable, Renderable, Spatial
         this.y = y
     }
 
-    override fun onFixedUpdate(engine: PulseEngine) { }
+    override fun onFixedUpdate(engine: PulseEngine)
+    {
+        val level = engine.scene.getEntityOfType<Level>(parentId) ?: return
+        val (xTarget, yTarget) = level.getWorldPos(xCell, yCell)
+        x += (xTarget - x) * 0.3f
+        y += (yTarget - y) * 0.3f
+        rotation -= rotation.degreesBetween(angle.toFloat()) * 0.3f
+    }
 
     override fun onUpdate(engine: PulseEngine)
     {
         val owner = engine.scene.getEntityOfType<Bot>(ownerId)
         if (owner != null)
         {
-            x = owner.x
-            y = owner.y
-            rotation = owner.rotation
             xCell = owner.xCell
             yCell = owner.yCell
             angle = owner.angle
