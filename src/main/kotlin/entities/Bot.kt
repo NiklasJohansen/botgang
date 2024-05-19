@@ -8,7 +8,7 @@ import data.Scores
 import no.njoh.pulseengine.core.PulseEngine
 import no.njoh.pulseengine.core.asset.types.Font
 import no.njoh.pulseengine.core.asset.types.Texture.Companion.BLANK
-import no.njoh.pulseengine.core.graphics.Surface2D
+import no.njoh.pulseengine.core.graphics.surface.Surface
 import no.njoh.pulseengine.core.scene.SceneEntity
 import no.njoh.pulseengine.core.scene.interfaces.Renderable
 import no.njoh.pulseengine.core.scene.interfaces.Spatial
@@ -89,8 +89,7 @@ class Bot : SceneEntity(), Updatable, Spatial, Renderable
 
     private fun updateColor(command: String)
     {
-        val c = java.awt.Color.decode(command.substringAfter("_"))
-        color.setFrom(c.red / 255f, c.green / 255f, c.blue / 255f, 1f)
+        color.setFromHex(command.substringAfter("_"))
     }
 
     private fun moveTo(engine: PulseEngine, rawCommand: String)
@@ -205,7 +204,7 @@ class Bot : SceneEntity(), Updatable, Spatial, Renderable
 
     override fun onUpdate(engine: PulseEngine) { }
 
-    override fun onRender(engine: PulseEngine, surface: Surface2D)
+    override fun onRender(engine: PulseEngine, surface: Surface)
     {
         val alpha = if (isAlive) 1f else 0.3f
 
@@ -224,7 +223,7 @@ class Bot : SceneEntity(), Updatable, Spatial, Renderable
         surface.drawText(name, x, namePlateHeight, font = font, fontSize = fontSize, xOrigin = 0.5f, yOrigin = 0.5f)
     }
 
-    fun drawBody(surface: Surface2D, x: Float, y: Float, width: Float, height: Float, rot: Float, alpha: Float)
+    fun drawBody(surface: Surface, x: Float, y: Float, width: Float, height: Float, rot: Float, alpha: Float)
     {
         // Body
         surface.setDrawColor(color, alpha)

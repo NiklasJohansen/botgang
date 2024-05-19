@@ -5,9 +5,9 @@ import data.LevelState
 import entities.Level.CellType.*
 import no.njoh.pulseengine.core.PulseEngine
 import no.njoh.pulseengine.core.asset.types.Texture
-import no.njoh.pulseengine.core.graphics.Surface2D
+import no.njoh.pulseengine.core.graphics.surface.Surface
 import no.njoh.pulseengine.core.input.Key.*
-import no.njoh.pulseengine.core.input.Mouse
+import no.njoh.pulseengine.core.input.MouseButton
 import no.njoh.pulseengine.core.scene.SceneEntity
 import no.njoh.pulseengine.core.scene.SceneState
 import no.njoh.pulseengine.core.scene.interfaces.Initiable
@@ -58,7 +58,7 @@ class Level : SceneEntity(), Initiable, Spatial, Named, Renderable
         engine.scene.forEachEntityOfType<Bot> { if (it.isAlive) setOccupied(it.xCell, it.yCell) }
     }
 
-    override fun onRender(engine: PulseEngine, surface: Surface2D)
+    override fun onRender(engine: PulseEngine, surface: Surface)
     {
         if (xCells * yCells != cells.size)
             resizeLevel()
@@ -66,7 +66,7 @@ class Level : SceneEntity(), Initiable, Spatial, Named, Renderable
         val xStart = x - xCells * cellSize * 0.5f
         val yStart = y - yCells * cellSize * 0.5f
 
-        for (cellType in CellType.values())
+        for (cellType in CellType.entries)
         {
             for (yi in 0 until yCells)
             {
@@ -107,7 +107,7 @@ class Level : SceneEntity(), Initiable, Spatial, Named, Renderable
                 if (engine.input.isPressed(K_1)) editType = FLOOR
                 if (engine.input.isPressed(K_2)) editType = SPAWN
                 if (engine.input.isPressed(K_3)) editType = WALL
-                if (engine.input.isPressed(Mouse.RIGHT))
+                if (engine.input.isPressed(MouseButton.RIGHT))
                     cells[y * xCells + x] = editType.num
             }
         }

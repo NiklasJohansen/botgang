@@ -13,9 +13,9 @@ import no.njoh.pulseengine.core.scene.SceneEntity.Companion.DEAD
 import no.njoh.pulseengine.core.scene.SceneState.RUNNING
 import no.njoh.pulseengine.core.scene.SceneSystem
 import no.njoh.pulseengine.core.shared.primitives.Color
-import no.njoh.pulseengine.core.shared.primitives.SwapList
 import no.njoh.pulseengine.core.shared.utils.Extensions.toRadians
 import no.njoh.pulseengine.core.shared.utils.Logger
+import util.EMPTY_LIST
 import util.getActiveLevel
 import util.setDrawColor
 import kotlin.math.PI
@@ -201,12 +201,10 @@ class Server : SceneSystem()
             return true
 
         // Is there only one bot left alive
-        val bots = engine.scene.getAllEntitiesOfType<Bot>() ?: SwapList()
+        val bots = engine.scene.getAllEntitiesOfType<Bot>() ?: EMPTY_LIST
         val aliveBots = bots.count { it.isAlive }
-        if (bots.size > 1 && aliveBots < 2)
-            return true
-
-        return false
+        val totalBots = bots.size
+        return totalBots > 1 && aliveBots < 2
     }
 
     override fun onRender(engine: PulseEngine)
@@ -268,8 +266,10 @@ class Server : SceneSystem()
 
         val font = engine.asset.getOrNull<Font>("font-bold")
         val surface = engine.gfx.getSurfaceOrDefault("leaderboard")
+        val surfaceWidth = surface.config.width.toFloat()
+        val surfaceHeight = surface.config.height.toFloat()
         surface.setDrawColor(0f, 0f, 0f, alpha * 0.98f)
-        surface.drawTexture(Texture.BLANK, 0f, 0f, surface.width.toFloat(), surface.height.toFloat())
+        surface.drawTexture(Texture.BLANK, 0f, 0f, surfaceWidth, surfaceHeight)
 
         val bots = engine.scene.getAllEntitiesOfType<Bot>()?.sortedByDescending { it.score } ?: emptyList()
         val headingText = when
@@ -284,25 +284,25 @@ class Server : SceneSystem()
         surface.setDrawColor(headingColor, alpha)
         surface.drawText(
             text = headingText,
-            x = surface.width * 0.5f,
-            y = surface.height * 0.175f,
+            x = surfaceWidth * 0.5f,
+            y = surfaceHeight * 0.175f,
             font = font,
             fontSize = 200f,
             xOrigin = 0.5f,
             yOrigin = 0.5f
         )
 
-        val botSize = min(surface.height * 0.4f / bots.size, 80f)
+        val botSize = min(surfaceHeight * 0.4f / bots.size, 80f)
         val ySpacing = botSize * 1.5f
         val xSpacing = botSize * 1.2f
-        val xCenter = surface.width * 0.5f
-        val yCenter = surface.height * 0.2f + 160f
+        val xCenter = surfaceWidth * 0.5f
+        val yCenter = surfaceHeight * 0.2f + 160f
 
         bots.forEachIndexed { i, bot ->
             // Bot body
             bot.drawBody(
                 surface = surface,
-                x = xCenter - surface.width * 0.2f,
+                x = xCenter - surfaceWidth * 0.2f,
                 y = yCenter + i * ySpacing,
                 width = botSize,
                 height = botSize,
@@ -313,9 +313,9 @@ class Server : SceneSystem()
             // Separator line
             surface.setDrawColor(0.6f, 0.6f, 0.6f, alpha)
             surface.drawLine(
-                x0 = xCenter - surface.width * 0.2f + xSpacing,
+                x0 = xCenter - surfaceWidth * 0.2f + xSpacing,
                 y0 = yCenter + i * ySpacing + botSize * 0.6f,
-                x1 = xCenter + surface.width * 0.2f + botSize * 0.5f,
+                x1 = xCenter + surfaceWidth * 0.2f + botSize * 0.5f,
                 y1 = yCenter + i * ySpacing + botSize * 0.6f,
             )
 
@@ -323,7 +323,7 @@ class Server : SceneSystem()
             surface.setDrawColor(PODIUM_COLORS.getOrNull(i) ?: WHITE, alpha)
             surface.drawText(
                 text = bot.name,
-                x = xCenter - surface.width * 0.2f + xSpacing,
+                x = xCenter - surfaceWidth * 0.2f + xSpacing,
                 y = yCenter + i * ySpacing,
                 font = font,
                 fontSize = botSize,
@@ -333,8 +333,8 @@ class Server : SceneSystem()
 
             // Score
             surface.drawText(
-                text = "${bot.score} (${bot.kills})",
-                x = xCenter + surface.width * 0.2f + botSize * 0.5f,
+                textBuilder = { it.append(bot.score).append(" (").append(bot.kills).append(")") },
+                x = xCenter + surfaceWidth * 0.2f + botSize * 0.5f,
                 y = yCenter + i * ySpacing,
                 font = font,
                 fontSize = botSize,

@@ -4,13 +4,13 @@ import data.AmmoState
 import data.Scores
 import no.njoh.pulseengine.core.PulseEngine
 import no.njoh.pulseengine.core.asset.types.Texture
-import no.njoh.pulseengine.core.graphics.Surface2D
+import no.njoh.pulseengine.core.graphics.surface.Surface
 import no.njoh.pulseengine.core.scene.SceneEntity
 import no.njoh.pulseengine.core.scene.interfaces.Initiable
 import no.njoh.pulseengine.core.scene.interfaces.Renderable
 import no.njoh.pulseengine.core.scene.interfaces.Spatial
 import no.njoh.pulseengine.core.scene.interfaces.Updatable
-import no.njoh.pulseengine.core.shared.primitives.SwapList
+import util.EMPTY_LIST
 import util.getActiveLevel
 import util.getItemPickedUpBy
 import kotlin.math.max
@@ -56,7 +56,7 @@ class Ammo : SceneEntity(), Initiable, Updatable, Renderable, Spatial
             coolDownTimer = coolDownTicks
         }
 
-        for (bot in engine.scene.getAllEntitiesOfType<Bot>() ?: SwapList())
+        for (bot in engine.scene.getAllEntitiesOfType<Bot>() ?: EMPTY_LIST)
         {
             val isOnSameSpot = bot.xCell == xCell && bot.yCell == yCell
             if (!isOnSameSpot || amount <= 0)
@@ -81,7 +81,7 @@ class Ammo : SceneEntity(), Initiable, Updatable, Renderable, Spatial
 
     override fun onUpdate(engine: PulseEngine) { }
 
-    override fun onRender(engine: PulseEngine, surface: Surface2D)
+    override fun onRender(engine: PulseEngine, surface: Surface)
     {
         val size = min(width, height) * 0.9f
         surface.setDrawColor(0f, 0f, 0f, 0.05f)
@@ -101,7 +101,7 @@ class Ammo : SceneEntity(), Initiable, Updatable, Renderable, Spatial
                 y = y,
                 width = bulletWidth * 0.5f,
                 height = height * 0.15f,
-                rot = rotation + 180,
+                angle = rotation + 180,
                 xOrigin = 0.5f,
                 yOrigin = -0.2f,
                 cornerRadius = 3f
@@ -115,7 +115,7 @@ class Ammo : SceneEntity(), Initiable, Updatable, Renderable, Spatial
                 y = y,
                 width = bulletWidth * 0.6f,
                 height = height * 0.22f * 1.5f,
-                rot = rotation + 180,
+                angle = rotation + 180,
                 xOrigin = 0.5f,
                 yOrigin = 0.7f,
                 cornerRadius = 0f

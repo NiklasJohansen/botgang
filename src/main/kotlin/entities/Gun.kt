@@ -3,7 +3,7 @@ package entities
 import data.GunState
 import no.njoh.pulseengine.core.PulseEngine
 import no.njoh.pulseengine.core.asset.types.Texture
-import no.njoh.pulseengine.core.graphics.Surface2D
+import no.njoh.pulseengine.core.graphics.surface.Surface
 
 class Gun : Pickup()
 {
@@ -39,7 +39,7 @@ class Gun : Pickup()
         }
     }
 
-    override fun onRender(engine: PulseEngine, surface: Surface2D)
+    override fun onRender(engine: PulseEngine, surface: Surface)
     {
         // Handle
         surface.setDrawColor(71/255f, 51/255f, 26/255f)
@@ -49,7 +49,7 @@ class Gun : Pickup()
             y = y,
             width = width * 0.8f,
             height = height * 0.40f,
-            rot = rotation + 80,
+            angle = rotation + 80,
             xOrigin = 0.9f,
             yOrigin = 1f,
             cornerRadius = 4f
@@ -63,7 +63,7 @@ class Gun : Pickup()
             y = y,
             width = width,
             height = height * 0.32f,
-            rot = rotation,
+            angle = rotation,
             xOrigin = 0.5f,
             yOrigin = 0.5f,
             cornerRadius = 4f
@@ -79,7 +79,7 @@ class Gun : Pickup()
                 y = y,
                 width = width * 0.07f,
                 height = height * 0.1f,
-                rot = rotation + 80,
+                angle = rotation + 80,
                 xOrigin = 5.4f + (bulletCount - i - 1) * 1.85f,
                 yOrigin = 1.5f,
                 cornerRadius = 3f
@@ -93,7 +93,7 @@ class Gun : Pickup()
                 y = y,
                 width = width * 0.08f,
                 height = height * 0.22f,
-                rot = rotation + 80,
+                angle = rotation + 80,
                 xOrigin = 4.8f + (bulletCount - i - 1) * 1.6f,
                 yOrigin = 1.5f,
                 cornerRadius = 0f

@@ -3,11 +3,12 @@ package util
 import Server
 import entities.Level
 import entities.Pickup
-import no.njoh.pulseengine.core.graphics.Surface2D
+import no.njoh.pulseengine.core.graphics.surface.Surface
+import no.njoh.pulseengine.core.scene.SceneEntityList
 import no.njoh.pulseengine.core.scene.SceneManager
 import no.njoh.pulseengine.core.shared.primitives.Color
 
-fun Surface2D.setDrawColor(color: Color, alpha: Float = 1f)
+fun Surface.setDrawColor(color: Color, alpha: Float = 1f)
 {
     setDrawColor(color.red, color.green, color.blue, color.alpha * alpha)
 }
@@ -36,3 +37,5 @@ inline fun SceneManager.forEachActivePickup(action: (Pickup) -> Unit)
     for (id in level.pickupIds)
         getEntityOfType<Pickup>(id)?.let(action)
 }
+
+val EMPTY_LIST = SceneEntityList<Nothing>()

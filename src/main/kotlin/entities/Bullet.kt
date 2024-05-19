@@ -4,13 +4,13 @@ import data.BulletState
 import data.Scores
 import no.njoh.pulseengine.core.PulseEngine
 import no.njoh.pulseengine.core.asset.types.Texture.Companion.BLANK
-import no.njoh.pulseengine.core.graphics.Surface2D
+import no.njoh.pulseengine.core.graphics.surface.Surface
 import no.njoh.pulseengine.core.scene.SceneEntity
 import no.njoh.pulseengine.core.scene.interfaces.Initiable
 import no.njoh.pulseengine.core.scene.interfaces.Renderable
 import no.njoh.pulseengine.core.scene.interfaces.Spatial
 import no.njoh.pulseengine.core.scene.interfaces.Updatable
-import no.njoh.pulseengine.core.shared.primitives.SwapList
+import util.EMPTY_LIST
 import util.getActiveLevel
 
 class Bullet : SceneEntity(), Initiable, Updatable, Renderable, Spatial
@@ -44,7 +44,7 @@ class Bullet : SceneEntity(), Initiable, Updatable, Renderable, Spatial
         }
         else this.set(DEAD)
 
-        for (bot in engine.scene.getAllEntitiesOfType<Bot>() ?: SwapList())
+        for (bot in engine.scene.getAllEntitiesOfType<Bot>() ?: EMPTY_LIST)
         {
             if (bot.id == ownerId || !bot.isAlive) continue
 
@@ -74,7 +74,7 @@ class Bullet : SceneEntity(), Initiable, Updatable, Renderable, Spatial
 
     override fun onUpdate(engine: PulseEngine) { }
 
-    override fun onRender(engine: PulseEngine, surface: Surface2D)
+    override fun onRender(engine: PulseEngine, surface: Surface)
     {
         surface.setDrawColor(1f, 1f, 0f)
         surface.drawTexture(
@@ -83,7 +83,7 @@ class Bullet : SceneEntity(), Initiable, Updatable, Renderable, Spatial
             y = y,
             width = width * 0.6f,
             height = 5f,
-            rot = if (yVel == 0) 0f else 90f,
+            angle = if (yVel == 0) 0f else 90f,
             xOrigin = 0.5f,
             yOrigin = 0.5f,
             cornerRadius = 2f
